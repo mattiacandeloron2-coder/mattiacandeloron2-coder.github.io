@@ -1,0 +1,193 @@
+---
+import '../style.css'
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mattia Candeloro — Industrial Design</title>
+    <meta
+      name="description"
+      content="Personal industrial and environmental design portfolio of Mattia Candeloro."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="type-back" aria-hidden="true" hidden>
+      <p class="hero-back" data-hero-back>CANDELORO</p>
+    </div>
+
+    <div id="webgl"></div>
+    <div id="css3d"></div>
+    <div class="works" data-works hidden></div>
+    <div class="works-index" data-works-index hidden aria-hidden="true">
+      <div class="works-index-stage">
+        <p class="works-index-kicker">Selected works</p>
+        <div class="works-index-ring" data-works-index-ring></div>
+      </div>
+      <p class="works-index-name" data-works-index-name>
+        <span data-works-index-title></span>
+        <span data-works-index-kind></span>
+      </p>
+    </div>
+    <button type="button" class="index-back" data-index-back hidden>INDEX</button>
+
+    <div class="overlay">
+      <p class="meta-tl" data-meta>PORTFOLIO / 2026</p>
+      <h1 class="hero-name" data-hero>
+        <span>HI, I'M</span>
+        <span class="hero-name-accent">MATTIA CANDELORO</span>
+      </h1>
+      <p class="role" data-role>
+        INDUSTRIAL AND<br />
+        ENVIRONMENTAL DESIGNER
+      </p>
+      <div class="scroll-hint" data-scroll-hint>
+        <span class="scroll-orb" aria-label="Scroll">
+          <span class="scroll-orb-arrow" aria-hidden="true"></span>
+        </span>
+      </div>
+
+      <p class="blow-hint" data-blow-hint>blow on the mic</p>
+
+      <div class="outro" data-outro>
+        <p class="outro-line">SCROLL TO SEE</p>
+        <p class="outro-line">MY SELECTED WORKS</p>
+        <span class="outro-arrow" aria-hidden="true"></span>
+      </div>
+
+      <div class="project-meta" data-project-meta hidden>
+        <span data-project-id></span>
+        <strong data-project-title></strong>
+        <em data-project-tag></em>
+      </div>
+
+      <article class="project-info" data-project-info hidden>
+        <span class="project-info-label" data-project-label></span>
+        <p data-project-copy></p>
+        <button type="button" class="project-back" data-project-back>BACK</button>
+      </article>
+    </div>
+
+    <button type="button" class="skip" data-skip>
+      <span class="skip-orb">
+        <span class="skip-core" data-skip-core></span>
+        <canvas class="skip-cloud" data-skip-cloud width="236" height="236"></canvas>
+      </span>
+      <span class="skip-label">SKIP AND GO TO INFORMATION AND PROJECTS PAGE</span>
+    </button>
+
+    <aside class="cv-sheet" data-cv-sheet hidden aria-hidden="true">
+      <button type="button" class="cv-close" data-cv-close>CLOSE</button>
+      <div class="cv-page" data-cv-page>
+        <section class="cv-intro">
+          <img class="cv-photo" data-cv-image data-punched="1" src="/cv-portrait.png" alt="" />
+          <p class="cv-kicker">Hello I'm</p>
+          <h2 class="cv-name">Mattia Candeloro</h2>
+          <p class="cv-bio">
+            A 23 years old aspiring product designer, from Tortoreto Lido (TE, Italy), driven by the
+            ambition to contribute to the material transition needed to address increasingly urgent
+            environmental challenges. I dream a future in which design is accessible to everyone
+            where beauty and function coexist, inspired by nature and its processes.
+          </p>
+        </section>
+
+        <div class="cv-mid">
+          <section class="cv-block">
+            <h3 class="cv-label">Education</h3>
+            <div class="cv-entry">
+              <span class="cv-place">Università degli studi di Camerino</span>
+              <span class="cv-detail">Bac. Deg. in Industrial and Environmental Design</span>
+              <span class="cv-detail">2022–2026</span>
+            </div>
+            <div class="cv-entry">
+              <span class="cv-place">LVMH</span>
+              <span class="cv-detail">Inside LVMH Certificate</span>
+              <span class="cv-detail">Sep. 2023 – Nov. 2023</span>
+            </div>
+            <div class="cv-entry">
+              <span class="cv-place">I.T.T. Crocetti Cerulli, Giulianova (TE)</span>
+              <span class="cv-detail">Technical Diploma in Computer Technology</span>
+              <span class="cv-detail">2016–2021</span>
+            </div>
+          </section>
+
+          <section class="cv-block">
+            <h3 class="cv-label">Languages</h3>
+            <div class="cv-entry">
+              <span class="cv-place">Italian</span>
+              <span class="cv-detail">Native</span>
+            </div>
+            <div class="cv-entry">
+              <span class="cv-place">English</span>
+              <span class="cv-detail">Fluent B2 TOEFL cert.</span>
+            </div>
+          </section>
+
+          <section class="cv-block">
+            <h3 class="cv-label">Contacts</h3>
+            <nav class="cv-contacts" data-cv-contacts aria-label="Contacts"></nav>
+          </section>
+        </div>
+
+        <div class="cv-side">
+          <section class="cv-block">
+            <h3 class="cv-label">Softwares</h3>
+            <div class="cv-catalog">
+              <div class="cv-catalog-row">
+                <span class="cv-catalog-label">3D</span>
+                <span class="cv-catalog-items">Rhinoceros 3D, Blender</span>
+              </div>
+              <div class="cv-catalog-row">
+                <span class="cv-catalog-label">Graphic</span>
+                <span class="cv-catalog-items">InDesign, Illustrator, Photoshop, Figma</span>
+              </div>
+              <div class="cv-catalog-row">
+                <span class="cv-catalog-label">Motion</span>
+                <span class="cv-catalog-items">DaVinci Resolve, Premiere Pro, Artivive</span>
+              </div>
+              <div class="cv-catalog-row">
+                <span class="cv-catalog-label">AI</span>
+                <span class="cv-catalog-items">Vizcom, Cursor, OpenCode</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="cv-block">
+            <h3 class="cv-label">Hard skills</h3>
+            <ul class="cv-list">
+              <li>Product design &amp; development</li>
+              <li>Prototyping</li>
+              <li>Product communication</li>
+              <li>3D modelling and printing</li>
+              <li>Rendering</li>
+              <li>Graphic design</li>
+              <li>Creative coding</li>
+            </ul>
+          </section>
+
+          <section class="cv-block">
+            <h3 class="cv-label">Soft skills</h3>
+            <ul class="cv-list">
+              <li>Problem solving</li>
+              <li>Critical thinking</li>
+              <li>User-centred design</li>
+              <li>Life Cycle Assessment (LCA) awareness</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </aside>
+
+    <div class="grain" aria-hidden="true"></div>
+
+    <script src="../main.js"></script>
+  </body>
+</html>

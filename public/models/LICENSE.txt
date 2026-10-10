@@ -1,0 +1,7 @@
+MakeHuman hm08 base mesh (CC0 1.0)
+
+Copyright holders at CC0 release (September 2020):
+Data Collection AB, Joel Palmius, Jonas Hauquier
+
+Source: http://www.makehumancommunity.org
+This is a temporary placeholder and should be replaced with Mattia's model.

@@ -1,0 +1,59 @@
+Firmamento
+Solo project
+4 months - 2026
+
+Font del box
+Titolo: Source Serif 4, 1.55rem, peso 400, colore #A6554C, interlinea 1.2, spaziatura -0.02em
+Testo: Instrument Sans, senza grazie, 1.02rem, peso 400, grassetti 600, colore #111111, interlinea 1.48, spaziatura -0.011em
+
+The context
+Following the COVID-19 pandemic, anxiety disorders rose by approximately 25% worldwide, highlighting the significant impact that crowded and overstimulating environments can have on psychological well-being.
+
+Firmamento was conceived to make underground transit spaces more humane and less stressful, through an intervention informed by research into aromatherapy, lighting, and soft, non-threatening forms, with the aim of reducing sensory overstimulation and fostering a greater sense of calm, safety, and well-being.
+
+The role of the light.
+Titolo: Source Serif 4, colore #A04940
+Scientific research highlights controlled breathing and the visualization of a familiar, safe place as effective ways to reduce anxiety and PTSD symptoms. Inspired by this, I designed the lights to evoke a starry sky, using gentle pulses to support focus and relaxation.
+
+How?
+Titolo: Source Serif 4, colore #353B49
+Firmamento combines an LED strip illuminating the wall and ceiling with randomly arranged LEDs that evoke a starry sky. Their soft, programmed fluctuations contrast with the harsh lighting of underground stations and help reduce sensory tension.
+
+Filters
+Titolo: Source Serif 4, 1.55rem, peso 400, colore #111111
+The perception of clean space has to keep pace with the real cleaning of it.
+
+That's why i designed a full filters system to clean the air of the subway and added tridimensional curves to the front of the object, so people's gonna get that the air pushed by the train is set to be cleaned by Firmamento, helping people to relax and stop thinking about what they're breathing.
+
+The Parfume as a vehicle of relax and informations.
+Titolo: Source Serif 4, colore #A04940
+I decided to choose a cold atomizer to make sure that the little particles of scent don't contribute to increase the humidity level, that's the result.
+
+The smell represent an identity element of the station and the place, using aromatherapy friendly smells it can help the user to relax in the metro station and to remember the specific station. I also designed an ipothetical parfume palette based on Rome and divided by day/night and the four seasons.
+
+Proposed olfactory palette
+Titolo: Source Serif 4, colore #353B49
+Giorno: Wisteria + Lemon Leaf + Mint / Lemon + Basil + Ozone / Fig Leaf + Mandarin + Grass / Grapefruit + Cypress + Ozone
+Notte: Lavender + White Tea + Orange / Maritime Pine + Cedar / Black Tea + Fig Wood + Chestnut / White Tea + Birch + Clean Linen
+
+The shell.
+Titolo: Source Serif 4, colore #A04940
+The front Polycarbonate panel is derived from a rectangle with rounded corners, then curved on both sides. When positioned near a corner, its shape helps to hide sharp edges and reduce the perception of threat associated with them.
+
+The structure, in Polycarbonate too is supported by a suspension arm, fixed to both the casing and the wall with four screws to ensure stability. The casing also features internal reinforcements, allowing the overall thickness of the object to be reduced without compromising structural strength.
+
+How I shaped the object.
+Titolo: Source Serif 4, colore #111111
+I started with the idea of creating small modular elements in different colours. As the research developed, I decided to darken the sharper parts of the design to reduce the visual cues that could trigger the amygdala. From there, I explored different shapes and lighting solutions, gradually integrating the filtration system as well. The final direction sits somewhere between fully organic forms and a more minimal, controlled aesthetic.
+
+RESEARCH
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+CONCEPT
+Ut enim ad minim veniam, quis nostrud exercitation ullamco.
+
+DEVELOPMENT
+Duis aute irure dolor in reprehenderit in voluptate velit esse.
+
+FINAL RESULT
+Excepteur sint occaecat cupidatat non proident, sunt in culpa.
