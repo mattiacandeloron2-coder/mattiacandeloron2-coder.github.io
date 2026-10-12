@@ -1471,6 +1471,7 @@ function setFade(nodes, value) {
 
 function paintEditorial(item, story, height) {
   const timeline = editorialTimeline(story, item.holds)
+  item.videoGate = { onVideo: false, audible: false }
   item.track.style.transform = `translate3d(0, ${timeline.shift * height}px, 0)`
   const frames = [...item.track.querySelectorAll(':scope > .works-frame')]
   frames.forEach((frame, index) => {
@@ -1483,9 +1484,14 @@ function paintEditorial(item, story, height) {
         frame.closest('.works.is-lens'),
         frame.closest('.works.is-opening'),
       )
-      frame.reel?.sync(showing && !hold)
-      frame.film?.sync(showing && !hold)
-      if (showing && !hold) frame.reel?.paint(performance.now())
+      const onVideo = showing && !hold
+      frame.reel?.sync(onVideo)
+      frame.film?.sync(onVideo)
+      if (onVideo) {
+        const video = frame.querySelector('video')
+        item.videoGate = { onVideo: true, audible: Boolean(video) && !video.muted }
+        frame.reel?.paint(performance.now())
+      }
       return
     }
     if (frame.classList.contains('is-hang')) {
@@ -1618,7 +1624,7 @@ function paintEditorial(item, story, height) {
 }
 
 export class WorksStrip {
-  constructor(root, projects, { reducedMotion = false, onNext, onPrevious, onCompact, onRefresh } = {}) {
+  constructor(root, projects, { reducedMotion = false, onNext, onPrevious, onCompact, onRefresh, onSoundtrack } = {}) {
     this.root = root
     this.slides = []
     this.reducedMotion = reducedMotion
@@ -1626,6 +1632,7 @@ export class WorksStrip {
     this.onPrevious = onPrevious
     this.onCompact = onCompact
     this.onRefresh = onRefresh
+    this.onSoundtrack = onSoundtrack
     this.openId = null
     this.lensId = null
     this.story = 0
@@ -1788,6 +1795,7 @@ export class WorksStrip {
 
   update(openId, previewId = null, opening = false) {
     if (!this.root) return
+    let videoGate = { onVideo: false, audible: false }
     const lens = Boolean(previewId) && !openId
     if (openId) this.open(openId)
     else if (lens) this.armLens(previewId)
@@ -1820,6 +1828,7 @@ export class WorksStrip {
         })
         if (item.editorial) {
           item.paper = paintEditorial(item, this.story, height)
+          if (item.videoGate?.onVideo) videoGate = item.videoGate
           item.track.querySelectorAll('.works-frame.is-idea').forEach((frame) => frame.turn?.render())
           return
         }
@@ -1935,5 +1944,6 @@ export class WorksStrip {
     const openSlide = this.slides.find((item) => item.id === openId)
     const paper = openSlide?.editorial ? Boolean(openSlide.paper) : Boolean(openId) && storyPaper(this.story)
     this.root.classList.toggle('is-paper', paper)
+    this.onSoundtrack?.(videoGate)
   }
 }

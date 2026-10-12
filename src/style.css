@@ -512,7 +512,7 @@ body {
 .cv-close {
   position: absolute;
   top: 1.35rem;
-  right: 1.5rem;
+  right: calc(1.5rem + 42px + 0.75rem);
   z-index: 1;
   padding: 0;
   border: 0;
@@ -983,7 +983,7 @@ body {
 
 .works-film-mute {
   position: absolute;
-  top: 3.6rem;
+  top: 6.8rem;
   right: 1.5rem;
   z-index: 4;
   display: grid;
@@ -3233,7 +3233,7 @@ body {
 .index-back {
   position: fixed;
   top: 1.35rem;
-  right: 1.5rem;
+  right: calc(1.5rem + 42px + 0.75rem);
   z-index: 8;
   padding: 0;
   border: 0;
@@ -3255,6 +3255,69 @@ body {
 .index-back:hover,
 .index-back:focus-visible {
   color: #ffffff;
+}
+
+.sound {
+  position: fixed;
+  top: 1.15rem;
+  right: 1.5rem;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.sound-mute {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #111111;
+  box-shadow: 0 0 0 1px rgba(247, 247, 244, 0.45);
+  color: #f7f7f4;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.sound-mute:not(.is-muted) {
+  background: rgba(247, 247, 244, 0.94);
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.2);
+  color: #111111;
+}
+
+.sound-mute svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sound-mute:focus-visible {
+  outline: 1px solid #111111;
+  outline-offset: 3px;
+}
+
+.sound-hint {
+  max-width: 11rem;
+  margin: 0;
+  padding: 0.28rem 0.5rem 0.32rem;
+  border-radius: 0.35rem;
+  background: rgba(247, 247, 244, 0.94);
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+  color: #111111;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  text-align: right;
+  pointer-events: none;
+}
+
+.sound-hint[hidden] {
+  display: none;
 }
 
 .grain {
@@ -4026,11 +4089,16 @@ body {
 
   .index-back {
     top: 1.1rem;
+    right: calc(1.1rem + 42px + 0.6rem);
+  }
+
+  .sound {
+    top: 0.85rem;
     right: 1.1rem;
   }
 
   .works-film-mute {
-    top: 3.2rem;
+    top: 6.6rem;
     right: 1.1rem;
   }
 

@@ -8,6 +8,7 @@ import { WorksIndex, applyProjectWheel, indexButtonVisible, nextProjectId, previ
 import { PortfolioSheet } from './portfolioSheet.js'
 import { SkipNebula } from './skipNebula.js'
 import { CvSheet, blowHintAllowed } from './cvSheet.js'
+import { Soundtrack } from './soundtrack.js'
 import { CameraRig } from './CameraRig.js'
 import { ParticleFigure } from './ParticleFigure.js'
 import { Sections } from './Sections.js'
@@ -147,6 +148,12 @@ export class Experience {
         this.scroll.current = 0
         this.scroll.velocity = 0
       },
+      onSoundtrack: (gate) => this.soundtrack?.setVideo(gate),
+    })
+    this.soundtrack = new Soundtrack({
+      audio: document.querySelector('[data-sound]'),
+      button: document.querySelector('[data-sound-mute]'),
+      hint: document.querySelector('[data-sound-hint]'),
     })
     this.scroll.onLocked = (event) => {
       if (this.cvSheet?.open || this.portfolio?.isOpen) return
