@@ -1,4 +1,5 @@
 import { cvContactIcon, cvContacts } from './cvSheet.js'
+import { frameHoldsSoundtrack } from './soundtrack.js'
 import { hangFrame } from './hang/frame.js'
 import { lerp, smoothstep } from './math.js'
 import { PosterFan } from './posters.js'
@@ -1487,11 +1488,11 @@ function paintEditorial(item, story, height) {
       const onVideo = showing && !hold
       frame.reel?.sync(onVideo)
       frame.film?.sync(onVideo)
-      if (onVideo) {
+      if (onVideo && frameHoldsSoundtrack(frame.classList.contains('is-film') ? 'film' : 'reel')) {
         const video = frame.querySelector('video')
         item.videoGate = { onVideo: true, audible: Boolean(video) && !video.muted }
-        frame.reel?.paint(performance.now())
       }
+      if (onVideo) frame.reel?.paint(performance.now())
       return
     }
     if (frame.classList.contains('is-hang')) {

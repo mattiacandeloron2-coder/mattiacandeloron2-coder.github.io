@@ -1,3 +1,7 @@
+export function frameHoldsSoundtrack(kind) {
+  return kind === 'film'
+}
+
 export function nextSoundtrackHold(held, gate) {
   if (!gate?.onVideo) return false
   return Boolean(held) || Boolean(gate.audible)

@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { nextSoundtrackHold, soundtrackCanPlay } from './soundtrack.js'
+import { frameHoldsSoundtrack, nextSoundtrackHold, soundtrackCanPlay } from './soundtrack.js'
+
+describe('frameHoldsSoundtrack', () => {
+  it('leaves the song playing through Salotto', () => {
+    assert.equal(frameHoldsSoundtrack('reel'), false)
+  })
+
+  it('pauses the song only for Look Behind', () => {
+    assert.equal(frameHoldsSoundtrack('film'), true)
+  })
+})
 
 describe('nextSoundtrackHold', () => {
   it('lets the song play when no video is on screen', () => {
