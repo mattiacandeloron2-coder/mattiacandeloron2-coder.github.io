@@ -832,6 +832,10 @@ body {
   opacity: 0;
 }
 
+.works.is-lens {
+  z-index: 5;
+}
+
 .works-slide {
   position: absolute;
   inset: 0;
@@ -2847,11 +2851,39 @@ body {
   margin-top: 0.28rem;
 }
 
+@property --lens-r {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 8px;
+}
+
 .works-index {
+  --lens-x: 50vw;
+  --lens-y: 50vh;
+  --lens-r: 8px;
   z-index: 5;
   overflow: hidden;
   background: transparent;
   perspective: none;
+  transition: --lens-r 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.works-index.is-opening {
+  transition: none;
+}
+
+.works-index.is-view .works-index-stage,
+.works-index.is-opening .works-index-stage {
+  -webkit-mask-image: radial-gradient(
+    circle at var(--lens-x) var(--lens-y),
+    transparent var(--lens-r),
+    #000 calc(var(--lens-r) + 0.6px)
+  );
+  mask-image: radial-gradient(
+    circle at var(--lens-x) var(--lens-y),
+    transparent var(--lens-r),
+    #000 calc(var(--lens-r) + 0.6px)
+  );
 }
 
 .works-index:not([hidden]) {
@@ -2873,6 +2905,7 @@ body {
   width: 16px;
   height: 16px;
   margin: -8px 0 0 -8px;
+  border: 0 solid transparent;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.42);
   color: transparent;
@@ -2884,11 +2917,9 @@ body {
   opacity: 0;
   transform: translate3d(-120px, -120px, 0);
   transition:
-    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    margin 0.28s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.28s ease,
     color 0.2s ease,
+    border-color 0.28s ease,
     opacity 0.18s ease;
 }
 
@@ -2897,12 +2928,21 @@ body {
 }
 
 .works-index-cursor.is-view {
-  width: 84px;
-  height: 84px;
-  margin: -42px 0 0 -42px;
+  width: calc(var(--lens-r) * 2);
+  height: calc(var(--lens-r) * 2);
+  margin: calc(var(--lens-r) * -1) 0 0 calc(var(--lens-r) * -1);
   padding-left: 0.14em;
-  background: rgba(255, 255, 255, 0.88);
-  color: #111111;
+  border-width: 1.5px;
+  border-color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  color: #f7f7f4;
+  text-shadow: 0 0 0.7rem rgba(0, 0, 0, 0.55);
+}
+
+.works-index.is-opening .works-index-cursor {
+  color: transparent;
+  border-color: transparent;
+  text-shadow: none;
 }
 
 .works-index.is-stack .works-index-cursor {

@@ -155,6 +155,7 @@ export class Experience {
     this.worksIndex = new WorksIndex(document.querySelector('[data-works-index]'), config.projects, {
       reducedMotion: this.reducedMotion,
       onOpen: (id) => this.openProject(id),
+      onPrime: (id) => this.works.primeReel(id),
     })
     this.skip = new SkipNebula(document.querySelector('[data-skip]'), {
       reducedMotion: this.reducedMotion,
@@ -590,7 +591,7 @@ export class Experience {
     this.cssParent.style.transform = rise
     if (this.overlayEl) this.overlayEl.style.transform = rise
     if (this.typeBackEl) this.typeBackEl.style.transform = rise
-    this.works.update(this.openProjectId)
+    this.works.update(this.openProjectId, this.worksIndex?.previewId ?? null)
     this.worksIndex?.update(
       travel,
       this.openProjectId,
@@ -600,7 +601,9 @@ export class Experience {
     )
     this.skip.update(dt, travel)
     if (this.indexBackEl) this.indexBackEl.hidden = !indexButtonVisible(this.openProjectId)
-    if (this.scroll) this.scroll.locked = applyProjectWheel(this.openProjectId)
+    if (this.scroll) {
+      this.scroll.locked = applyProjectWheel(this.openProjectId) || Boolean(this.worksIndex?.opening)
+    }
 
     this.renderer.render(this.scene, this.camera)
     this.cssRenderer.render(this.cssScene, this.camera)

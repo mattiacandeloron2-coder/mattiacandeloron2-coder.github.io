@@ -22,6 +22,10 @@ import {
   indexProjects,
   indexSettled,
   indexCursorState,
+  lensCoverRadius,
+  lensGrowRadius,
+  lensPageRadius,
+  LENS_VIEW,
   indexShare,
   indexSpecLines,
   indexStageOpacity,
@@ -144,6 +148,20 @@ describe('indexCursorState', () => {
   it('is a dot on the index and view over a project', () => {
     assert.equal(indexCursorState(true, false), 'dot')
     assert.equal(indexCursorState(true, true), 'view')
+  })
+})
+
+describe('lensGrowRadius', () => {
+  it('opens to the page size before it covers the screen', () => {
+    const page = lensPageRadius(1200, 800)
+    const cover = lensCoverRadius(1200, 800, 100, 100)
+    assert.equal(page, 400)
+    assert.ok(cover > page)
+    assert.equal(lensGrowRadius(0, LENS_VIEW, page, cover), LENS_VIEW)
+    assert.ok(Math.abs(lensGrowRadius(0.46, LENS_VIEW, page, cover) - page) < 1)
+    assert.ok(lensGrowRadius(0.2, LENS_VIEW, page, cover) < page)
+    assert.ok(lensGrowRadius(0.7, LENS_VIEW, page, cover) > page)
+    assert.ok(Math.abs(lensGrowRadius(1, LENS_VIEW, page, cover) - cover) < 1)
   })
 })
 

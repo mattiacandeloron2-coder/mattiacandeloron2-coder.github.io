@@ -75,9 +75,38 @@ export function indexDate(project) {
   return (project?.lines ?? []).find((line) => /\d+\s*(week|weeks|month|months)/i.test(line)) ?? ''
 }
 
+export const LENS_DOT = 8
+export const LENS_VIEW = 42
+
 export function indexCursorState(overIndex, overProject) {
   if (!overIndex) return 'off'
   return overProject ? 'view' : 'dot'
+}
+
+function lensEase(progress) {
+  const t = clamp(progress, 0, 1)
+  return 1 - (1 - t) ** 3
+}
+
+export function lensPageRadius(width, height) {
+  return Math.min(Math.max(width, 0), Math.max(height, 0)) / 2
+}
+
+export function lensCoverRadius(width, height, x, y) {
+  const corners = [
+    [0, 0],
+    [width, 0],
+    [0, height],
+    [width, height],
+  ]
+  return corners.reduce((radius, [cx, cy]) => Math.max(radius, Math.hypot(cx - x, cy - y)), 0) + 2
+}
+
+export function lensGrowRadius(progress, from, page, cover) {
+  const split = 0.46
+  const t = clamp(progress, 0, 1)
+  if (t < split) return lerp(from, page, lensEase(t / split))
+  return lerp(page, cover, lensEase((t - split) / (1 - split)))
 }
 
 export function indexShare(projectId, hoveredId) {
@@ -167,12 +196,14 @@ export function indexItemPose({ index, count, mix, time, stacked }) {
 }
 
 export class WorksIndex {
-  constructor(root, projects, { onOpen, reducedMotion = false } = {}) {
+  constructor(root, projects, { onOpen, onPrime, reducedMotion = false } = {}) {
     this.root = root
     this.projects = projects
     this.onOpen = onOpen
+    this.onPrime = onPrime
     this.reducedMotion = reducedMotion
     this.hoveredId = null
+    this.openingId = null
     this.stacked = false
     this.items = []
     this.nameEl = root?.querySelector('[data-works-index-name]') ?? null
@@ -187,13 +218,14 @@ export class WorksIndex {
     this.cursor.setAttribute('aria-hidden', 'true')
     root.appendChild(this.cursor)
     this.onCursorMove = (event) => {
-      if (!this.cursor || this.stacked) return
+      if (!this.cursor || this.stacked || this.openingId) return
       const state = indexCursorState(true, Boolean(this.hoveredId))
       this.cursor.classList.toggle('is-on', state !== 'off')
       this.cursor.classList.toggle('is-view', state === 'view')
-      this.cursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`
+      this.placeLens(event.clientX, event.clientY)
     }
     this.onCursorLeave = () => {
+      if (this.openingId) return
       this.cursor?.classList.remove('is-on', 'is-view')
     }
     root.addEventListener('pointermove', this.onCursorMove)
@@ -242,14 +274,75 @@ export class WorksIndex {
       item.addEventListener('pointerleave', () => this.hover(null))
       item.addEventListener('focus', () => this.hover(project.id))
       item.addEventListener('blur', () => this.hover(null))
-      item.addEventListener('click', () => this.onOpen?.(project.id))
+      item.addEventListener('click', (event) => this.openFrom(project.id, event, item))
       stage.appendChild(item)
       this.items.push(item)
     })
   }
 
-  hover(id) {
+  get opening() {
+    return Boolean(this.openingId)
+  }
+
+  get previewId() {
+    if (this.stacked) return null
+    if (this.openingId) return this.openingId
+    if (!this.root?.classList.contains('is-ready')) return null
+    return this.hoveredId
+  }
+
+  placeLens(x, y, radius = null) {
+    if (!this.root) return
+    this.root.style.setProperty('--lens-x', `${x}px`)
+    this.root.style.setProperty('--lens-y', `${y}px`)
+    if (radius != null) this.root.style.setProperty('--lens-r', `${radius}px`)
+    if (this.cursor) this.cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`
+  }
+
+  openFrom(id, event, item) {
+    if (this.openingId) return
+    const box = item.getBoundingClientRect()
+    const fromPointer = event.clientX > 0 || event.clientY > 0
+    const x = fromPointer ? event.clientX : box.left + box.width / 2
+    const y = fromPointer ? event.clientY : box.top + box.height / 2
+    if (this.stacked || this.reducedMotion) {
+      this.onOpen?.(id)
+      return
+    }
+    this.openingId = id
     this.hoveredId = id
+    this.onPrime?.(id)
+    this.root?.classList.add('is-opening', 'is-view')
+    this.cursor?.classList.add('is-on', 'is-view')
+    const from =
+      parseFloat(getComputedStyle(this.root).getPropertyValue('--lens-r')) || LENS_VIEW
+    const page = lensPageRadius(window.innerWidth, window.innerHeight)
+    const cover = lensCoverRadius(window.innerWidth, window.innerHeight, x, y)
+    const started = performance.now()
+    const duration = 1180
+    const step = (now) => {
+      const progress = Math.min(1, (now - started) / duration)
+      this.placeLens(x, y, lensGrowRadius(progress, from, page, cover))
+      if (progress < 1) {
+        this.openFrame = requestAnimationFrame(step)
+        return
+      }
+      this.openingId = null
+      this.root?.classList.remove('is-opening', 'is-view')
+      this.root.style.opacity = '0'
+      this.onOpen?.(id)
+    }
+    this.placeLens(x, y, from)
+    this.openFrame = requestAnimationFrame(step)
+  }
+
+  hover(id) {
+    if (this.openingId) return
+    this.hoveredId = id
+    const lens = Boolean(id) && !this.stacked
+    this.root?.classList.toggle('is-view', lens)
+    if (lens) this.root?.style.setProperty('--lens-r', `${LENS_VIEW}px`)
+    else if (!this.openingId) this.root?.style.setProperty('--lens-r', `${LENS_DOT}px`)
     this.root?.classList.toggle('is-hot', Boolean(id))
     if (this.cursor && !this.stacked) {
       const state = indexCursorState(this.cursor.classList.contains('is-on'), Boolean(id))
@@ -294,7 +387,11 @@ export class WorksIndex {
     this.root.classList.toggle('is-ready', ready)
     this.root.classList.toggle('is-still', this.reducedMotion)
     this.root.classList.toggle('is-stack', stacked)
-    if (stacked) this.cursor?.classList.remove('is-on', 'is-view')
+    if (stacked) {
+      this.cursor?.classList.remove('is-on', 'is-view')
+      if (!this.openingId) this.root.classList.remove('is-view')
+    }
+    if (!ready && this.hoveredId && !this.openingId) this.hover(null)
     this.items.forEach((item) => {
       item.classList.toggle(
         'is-copy',

@@ -1585,6 +1585,7 @@ export class WorksStrip {
     this.onCompact = onCompact
     this.onRefresh = onRefresh
     this.openId = null
+    this.lensId = null
     this.story = 0
     this.storyTarget = 0
     if (!root) return
@@ -1654,16 +1655,50 @@ export class WorksStrip {
   }
 
   open(id) {
-    if (id === this.openId) return
+    if (id === this.openId && !this.lensId) return
+    const continuing = Boolean(id) && id === this.lensId
     this.dismissPoster()
     this.openId = id
+    this.lensId = null
+    if (!continuing) {
+      this.story = 0
+      this.storyTarget = 0
+    }
+    if (!id) return
+    const item = this.slides.find((slide) => slide.id === id)
+    if (!continuing) {
+      item?.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => frame.reel?.reset())
+      item?.track?.querySelectorAll('.works-frame.is-film').forEach((frame) => frame.film?.reset())
+    }
+    item?.track?.querySelectorAll('.works-frame.is-idea').forEach((frame) => frame.turn?.wake())
+    item?.track?.querySelectorAll('.works-frame.is-sticker').forEach((frame) => frame.adhesion?.wake())
+  }
+
+  armLens(id) {
+    if (this.lensId === id && this.openId == null) return
+    this.openId = null
+    this.lensId = id
     this.story = 0
     this.storyTarget = 0
     const item = this.slides.find((slide) => slide.id === id)
-    item?.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => frame.reel?.reset())
+    item?.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => {
+      frame.reel?.reset()
+      const video = frame.querySelector('video')
+      if (video) video.muted = true
+    })
     item?.track?.querySelectorAll('.works-frame.is-film').forEach((frame) => frame.film?.reset())
-    item?.track?.querySelectorAll('.works-frame.is-idea').forEach((frame) => frame.turn?.wake())
-    item?.track?.querySelectorAll('.works-frame.is-sticker').forEach((frame) => frame.adhesion?.wake())
+  }
+
+  primeReel(id) {
+    const item = this.slides.find((slide) => slide.id === id)
+    item?.track?.querySelectorAll('.works-frame.is-reel video').forEach((video) => {
+      video.muted = false
+      const pending = video.play()
+      pending?.catch?.(() => {
+        video.muted = true
+        video.play()?.catch?.(() => {})
+      })
+    })
   }
 
   canNudge() {
@@ -1690,17 +1725,22 @@ export class WorksStrip {
     return true
   }
 
-  update(openId) {
+  update(openId, previewId = null) {
     if (!this.root) return
-    this.open(openId)
-    const open = Boolean(openId)
+    const lens = Boolean(previewId) && !openId
+    if (openId) this.open(openId)
+    else if (lens) this.armLens(previewId)
+    else this.open(null)
+    const shown = openId || previewId || null
+    const open = Boolean(shown)
     this.root.hidden = !open
+    this.root.classList.toggle('is-lens', lens)
     this.root.style.opacity = open ? '1' : '0'
     const height = this.root.clientHeight || window.innerHeight || 1
     this.story = this.reducedMotion ? this.storyTarget : lerp(this.story, this.storyTarget, 0.14)
 
     this.slides.forEach((item) => {
-      const visible = item.id === openId
+      const visible = item.id === shown
       item.slide.hidden = !visible
       if (!visible) {
         item.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => frame.reel?.sync(false))
@@ -1830,7 +1870,7 @@ export class WorksStrip {
       }
     })
     const openSlide = this.slides.find((item) => item.id === openId)
-    const paper = openSlide?.editorial ? Boolean(openSlide.paper) : open && storyPaper(this.story)
+    const paper = openSlide?.editorial ? Boolean(openSlide.paper) : Boolean(openId) && storyPaper(this.story)
     this.root.classList.toggle('is-paper', paper)
   }
 }
