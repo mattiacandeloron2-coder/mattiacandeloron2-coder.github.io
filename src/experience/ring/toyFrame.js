@@ -18,6 +18,8 @@ import {
   toyFallFrame,
   toyFrontClip,
   toyLayout,
+  TOY_HOLA_CYCLE,
+  TOY_HOLA_STEP,
   toyLetters,
   toySpaceAction,
   toySwing,
@@ -37,6 +39,9 @@ function letterButton(className, text) {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = className
+  button.style.setProperty('--hola-cycle', `${TOY_HOLA_CYCLE}ms`)
+  button.style.setProperty('--hola-step', `${TOY_HOLA_STEP}ms`)
+  let hola = 0
   for (const item of toyLetters(text)) {
     if (!item.color) {
       button.append(item.char)
@@ -45,6 +50,8 @@ function letterButton(className, text) {
     const span = document.createElement('span')
     span.textContent = item.char
     span.style.color = item.color
+    span.style.setProperty('--hola', String(hola))
+    hola += 1
     button.append(span)
   }
   return button
@@ -195,6 +202,8 @@ class ToyGame {
     this.cover.style.height = '0%'
     this.stage.hidden = false
     this.fail.hidden = true
+    this.failMore.classList.remove('is-hola')
+    this.revealMore.classList.remove('is-hola')
     this.reveal.hidden = true
     this.fall.hidden = true
     this.hint.hidden = true
@@ -428,6 +437,7 @@ class ToyGame {
     this.fall.hidden = true
     this.hint.hidden = true
     this.fail.hidden = false
+    this.failMore.classList.add('is-hola')
   }
 
   beginWave() {
@@ -458,6 +468,7 @@ class ToyGame {
     this.cover.style.height = '0%'
     this.canvas.hidden = true
     this.player.clear()
+    this.revealMore.classList.add('is-hola')
   }
 
   clearPieces() {

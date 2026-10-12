@@ -4121,7 +4121,8 @@ body {
   .works-cue-arrow,
   .works-next-arrow,
   .works-prev-arrow,
-  .works-sky-glow.is-awake {
+  .works-sky-glow.is-awake,
+  .works-toy-more.is-hola span {
     animation: none;
   }
 
@@ -4257,14 +4258,18 @@ body {
 
 .works-toy-reveal {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   place-items: center;
   padding: 6vh 6vw 12vh;
+  min-height: 0;
 }
 
-.works-toy-reveal img {
-  width: min(74vw, 76vh);
-  height: min(74vw, 76vh);
+.works-frame.is-toy .works-toy-reveal img {
+  width: auto;
+  height: auto;
+  max-width: min(74vw, 100%);
+  max-height: 100%;
+  min-height: 0;
   object-fit: contain;
 }
 
@@ -4318,6 +4323,34 @@ body {
   letter-spacing: 0.01em;
   white-space: pre;
   cursor: pointer;
+}
+
+.works-toy-more span {
+  display: inline-block;
+}
+
+.works-toy-more.is-hola span {
+  animation: works-toy-hola var(--hola-cycle) linear infinite;
+  animation-delay: calc(var(--hola) * var(--hola-step));
+}
+
+@keyframes works-toy-hola {
+  0% {
+    transform: translateY(0);
+  }
+
+  2.4% {
+    transform: translateY(-0.46em);
+  }
+
+  5.2% {
+    transform: translateY(0.05em);
+  }
+
+  8%,
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .works-toy-cover {

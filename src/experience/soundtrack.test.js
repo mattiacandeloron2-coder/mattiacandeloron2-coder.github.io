@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { frameHoldsSoundtrack, nextSoundtrackHold, soundtrackCanPlay } from './soundtrack.js'
+import { frameHoldsSoundtrack, nextSoundtrackHold, soundtrackCanPlay, soundtrackRestart } from './soundtrack.js'
 
 describe('frameHoldsSoundtrack', () => {
   it('leaves the song playing through Salotto', () => {
@@ -43,5 +43,15 @@ describe('soundtrackCanPlay', () => {
 
   it('plays once the button is off and the video is gone', () => {
     assert.equal(soundtrackCanPlay(false, false), true)
+  })
+})
+
+describe('soundtrackRestart', () => {
+  it('goes back to the start and plays when the song ends', () => {
+    assert.deepEqual(soundtrackRestart(false), { time: 0, play: true })
+  })
+
+  it('goes back to the start without playing while a video is holding it', () => {
+    assert.deepEqual(soundtrackRestart(true), { time: 0, play: false })
   })
 })

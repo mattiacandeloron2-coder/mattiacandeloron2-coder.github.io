@@ -11,6 +11,10 @@ export function soundtrackCanPlay(userMuted, held) {
   return !userMuted && !held
 }
 
+export function soundtrackRestart(held) {
+  return { time: 0, play: !held }
+}
+
 function soundIcon(muted) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -48,13 +52,22 @@ export class Soundtrack {
     this.hint = hint
     this.userMuted = true
     this.held = false
-    this.audio.loop = true
+    this.audio.loop = false
     this.audio.muted = true
+    this.audio.addEventListener('ended', () => this.restart())
     this.button.addEventListener('click', () => {
       this.userMuted = !this.userMuted
       this.apply()
     })
     this.apply()
+  }
+
+  restart() {
+    const next = soundtrackRestart(this.held)
+    this.audio.currentTime = next.time
+    if (!next.play) return
+    const pending = this.audio.play()
+    pending?.catch?.(() => {})
   }
 
   setVideo(gate) {

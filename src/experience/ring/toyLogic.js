@@ -310,6 +310,19 @@ export function toyAfterCatch(stacked, total = TOY_PIECES.length) {
   return { stacked: next, state: TOY_STACKED }
 }
 
+export const TOY_HOLA_CYCLE = 5000
+export const TOY_HOLA_STEP = 140
+export const TOY_HOLA_HOP = 400
+
+export function toyHolaDelay(index) {
+  return index * TOY_HOLA_STEP
+}
+
+export function toyHolaFits(count) {
+  if (count <= 0) return true
+  return toyHolaDelay(Math.max(0, count - 1)) + TOY_HOLA_HOP < TOY_HOLA_CYCLE
+}
+
 export function toyLetters(text, palette = TOY_INK) {
   let ink = 0
   return [...text].map((char) => {

@@ -21,6 +21,11 @@ import {
   toyFrontClip,
   toyLayout,
   toyLetters,
+  toyHolaDelay,
+  toyHolaFits,
+  TOY_HOLA_CYCLE,
+  TOY_HOLA_HOP,
+  TOY_HOLA_STEP,
   toyScale,
   toySpaceAction,
   toySwing,
@@ -106,6 +111,17 @@ describe('ring toy words', () => {
     assert.equal(colors.length, 15)
     assert.notEqual(colors[0], colors[1])
     assert.equal(new Set(colors).size, 6)
+  })
+
+  it('runs one hola through the letters about every five seconds', () => {
+    const count = toyLetters('scroll to see more').filter((letter) => letter.color).length
+    assert.equal(count, 15)
+    assert.equal(toyHolaDelay(0), 0)
+    assert.equal(toyHolaDelay(1) - toyHolaDelay(0), TOY_HOLA_STEP)
+    assert.equal(toyHolaDelay(count - 1) - toyHolaDelay(count - 2), TOY_HOLA_STEP)
+    assert.equal(toyHolaFits(count), true)
+    assert.ok(TOY_HOLA_CYCLE >= 4500 && TOY_HOLA_CYCLE <= 5500)
+    assert.equal(TOY_HOLA_HOP / TOY_HOLA_CYCLE, 0.08)
   })
 })
 
