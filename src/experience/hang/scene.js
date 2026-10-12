@@ -1,25 +1,85 @@
 import { Application, MeshRope, Point, Texture } from 'pixi.js'
 import { createBraidCanvas, createShadowCanvas } from './braid.js'
 import { createHangRopes } from './composition.js'
-import { hangConfig, pickTube, settleRopes, stepRopes } from './physics.js'
+import { hangConfig, pickTube, restRopes, settleRopes, stepRopes } from './physics.js'
+
+function cutCorners(src, dst) {
+  dst[0].x = src[0].x
+  dst[0].y = src[0].y
+  let write = 1
+  for (let i = 0; i < src.length - 1; i += 1) {
+    const a = src[i]
+    const b = src[i + 1]
+    dst[write].x = a.x * 0.75 + b.x * 0.25
+    dst[write].y = a.y * 0.75 + b.y * 0.25
+    write += 1
+    dst[write].x = a.x * 0.25 + b.x * 0.75
+    dst[write].y = a.y * 0.25 + b.y * 0.75
+    write += 1
+  }
+  dst[write].x = src[src.length - 1].x
+  dst[write].y = src[src.length - 1].y
+}
 
 function syncMeshes(ropes) {
   for (const rope of ropes) {
     const drop = rope.diameter * 0.12
-    for (let i = 0; i < rope.points.length; i += 1) {
-      const point = rope.points[i]
-      rope.meshPoints[i].x = point.x
-      rope.meshPoints[i].y = point.y
-      rope.shadowPoints[i].x = point.x
-      rope.shadowPoints[i].y = point.y + drop
+    cutCorners(rope.points, rope.curve)
+    cutCorners(rope.curve, rope.meshPoints)
+    const mesh = rope.meshPoints
+    const shadow = rope.shadowPoints
+    for (let i = 0; i < mesh.length; i += 1) {
+      shadow[i].x = mesh[i].x
+      shadow[i].y = mesh[i].y + drop
     }
+  }
+}
+
+function stabilizeRope(mesh) {
+  mesh.geometry.updateVertices = function updateVertices() {
+    const points = this.points
+    const total = points.length
+    if (total < 2) return
+    const vertices = this.buffers[0].data
+    const halfWidth = this.textureScale > 0 ? (this.textureScale * this._width) / 2 : this._width / 2
+    let prevNx = 0
+    let prevNy = 1
+    for (let i = 0; i < total; i += 1) {
+      const prev = points[Math.max(0, i - 1)]
+      const next = points[Math.min(total - 1, i + 1)]
+      let dx = next.x - prev.x
+      let dy = next.y - prev.y
+      const len = Math.hypot(dx, dy)
+      let nx = prevNx
+      let ny = prevNy
+      if (len > 1e-3) {
+        dx /= len
+        dy /= len
+        nx = -dy
+        ny = dx
+        if (i > 0 && nx * prevNx + ny * prevNy < 0) {
+          nx = -nx
+          ny = -ny
+        }
+      }
+      prevNx = nx
+      prevNy = ny
+      const index = i * 4
+      vertices[index] = points[i].x + nx * halfWidth
+      vertices[index + 1] = points[i].y + ny * halfWidth
+      vertices[index + 2] = points[i].x - nx * halfWidth
+      vertices[index + 3] = points[i].y - ny * halfWidth
+    }
+    this.buffers[0].update()
   }
 }
 
 function buildMeshes(stage, ropes, braid, shadow) {
   for (const rope of ropes) {
-    rope.meshPoints = rope.points.map((point) => new Point(point.x, point.y))
-    rope.shadowPoints = rope.points.map((point) => new Point(point.x, point.y))
+    const curveCount = rope.points.length * 2
+    rope.curve = Array.from({ length: curveCount }, () => new Point())
+    rope.meshPoints = Array.from({ length: curveCount * 2 }, () => new Point())
+    rope.shadowPoints = Array.from({ length: curveCount * 2 }, () => new Point())
     const shade = new MeshRope({
       texture: shadow,
       points: rope.shadowPoints,
@@ -32,6 +92,8 @@ function buildMeshes(stage, ropes, braid, shadow) {
     })
     shade.zIndex = rope.z * 2
     mesh.zIndex = rope.z * 2 + 1
+    stabilizeRope(shade)
+    stabilizeRope(mesh)
     rope.shade = shade
     rope.mesh = mesh
     stage.addChild(shade, mesh)
@@ -109,6 +171,7 @@ export function mountHang(stage, { reducedMotion = false } = {}) {
         pointer: pointer.type === 'touch' ? null : pointer,
         grab,
       })
+      restRopes(ropes, hangConfig.restLimit, grab?.id ?? null)
       acc -= 1000 / 60
       steps += 1
     }
@@ -147,6 +210,12 @@ export function mountHang(stage, { reducedMotion = false } = {}) {
   const onMove = (event) => {
     const point = place(event)
     const now = performance.now()
+    const travel = Math.hypot(point.x - pointer.x, point.y - pointer.y)
+    const holding = grab && (grab.pointerId == null || event.pointerId === grab.pointerId)
+    if (!holding && travel < 2) {
+      cursor()
+      return
+    }
     const dt = Math.max(8, now - pointer.movedAt) / 1000
     pointer.vx = (point.x - pointer.x) / dt
     pointer.vy = (point.y - pointer.y) / dt

@@ -22,6 +22,7 @@ import {
   storyScrollCue,
   storyEndChrome,
   storyEndNav,
+  projectContacts,
   skyTrailStep,
   reelStillBox,
   reelTrailFade,
@@ -29,6 +30,7 @@ import {
   reelTrailStep,
   reelTrailLife,
   editorialHold,
+  lensHoldsMedia,
   editorialRead,
   editorialIn,
   editorialTimeline,
@@ -142,6 +144,15 @@ describe('worksImageFocus', () => {
 
   it('defaults to center when a photo has no focus', () => {
     assert.equal(worksImageFocus({}), 'center center')
+  })
+})
+
+describe('lensHoldsMedia', () => {
+  it('keeps the first-slide video still until the hole starts growing', () => {
+    assert.equal(lensHoldsMedia(true, false), true)
+    assert.equal(lensHoldsMedia(true, true), false)
+    assert.equal(lensHoldsMedia(false, false), false)
+    assert.equal(lensHoldsMedia(false, true), false)
   })
 })
 
@@ -308,24 +319,27 @@ describe('projectFrames', () => {
     assert.equal(editorialIn(editorialTimeline(storySpan * 14, holds).frames.at(-1).dwell, 0.12, 0.72), 1)
   })
 
-  it('opens Ring Monster on the cover, then the product, then the process', () => {
+  it('opens Ring Monster on the toy, then the cover, the product, and the process', () => {
     const ring = config.projects.find((project) => project.id === '05')
     const frames = projectFrames(ring)
     assert.deepEqual(
       frames.map((frame) => frame.role),
-      ['cover', 'product', 'evolve'],
+      ['toy', 'cover', 'product', 'evolve'],
     )
-    assert.equal(frames[0].src, ring.image)
-    assert.match(frames[1].bolts, /stecche\.png$/)
-    assert.match(frames[1].sketches, /schizzi\.png$/)
-    assert.match(frames[1].animal, /kungo\.png$/)
-    assert.equal(frames[1].copy.tone, 'ink')
-    assert.equal(frames[1].copy.label, 'The product')
-    assert.match(frames[1].copy.body, /toy concept for IKEA/)
-    assert.match(frames[1].copy.body, /children aged 4–6/)
-    assert.match(frames[1].copy.body, /<strong>imagination<\/strong>/)
-    assert.match(frames[1].copy.body, /<strong>also be used as decorative objects<\/strong>/)
-    assert.match(frames[1].copy.body, /remember the good old days/)
+    assert.equal(frames[0].role, 'toy')
+    assert.equal(frames[1].src, ring.image)
+    assert.equal(frames[1].focus, '50% 82%')
+    assert.equal(editorialHold('toy'), 0)
+    assert.match(frames[2].bolts, /stecche\.png$/)
+    assert.match(frames[2].sketches, /schizzi\.png$/)
+    assert.match(frames[2].animal, /kungo\.png$/)
+    assert.equal(frames[2].copy.tone, 'ink')
+    assert.equal(frames[2].copy.label, 'The product')
+    assert.match(frames[2].copy.body, /toy concept for IKEA/)
+    assert.match(frames[2].copy.body, /children aged 4–6/)
+    assert.match(frames[2].copy.body, /<strong>imagination<\/strong>/)
+    assert.match(frames[2].copy.body, /<strong>also be used as decorative objects<\/strong>/)
+    assert.match(frames[2].copy.body, /remember the good old days/)
     assert.equal(editorialHold('product'), 2)
     assert.equal(productRush(0), 0)
     assert.ok(productRush(0.07) > 0.45 && productRush(0.07) < 0.55)
@@ -333,13 +347,13 @@ describe('projectFrames', () => {
     assert.equal(productRush(1), 1)
     assert.equal(editorialIn(0.14, 0.28, 0.62), 0)
     assert.equal(editorialIn(0.62, 0.28, 0.62), 1)
-    assert.equal(frames[2].copy.tone, 'clay')
-    assert.equal(frames[2].copy.label, 'The process')
-    assert.match(frames[2].copy.body, /Fisher-Price stacking toy/)
-    assert.match(frames[2].copy.body, /<strong>different meanings<\/strong>/)
-    assert.match(frames[2].copy.body, /<strong>invent, transform, and reinterpret their own creatures\.<\/strong>/)
+    assert.equal(frames[3].copy.tone, 'clay')
+    assert.equal(frames[3].copy.label, 'The process')
+    assert.match(frames[3].copy.body, /Fisher-Price stacking toy/)
+    assert.match(frames[3].copy.body, /<strong>different meanings<\/strong>/)
+    assert.match(frames[3].copy.body, /<strong>invent, transform, and reinterpret their own creatures\.<\/strong>/)
     assert.deepEqual(
-      frames[2].phases.map((phase) => phase.src),
+      frames[3].phases.map((phase) => phase.src),
       [
         '/progetti/Ring monster/evolve-1.png',
         '/progetti/Ring monster/evolve-2.png',
@@ -486,6 +500,17 @@ describe('editorialTimeline', () => {
     assert.equal(editorialOnPaper(storySpan * 2, holds, roles), true)
     const materialsStart = 1 + 2 + 1 + 2 + 1
     assert.equal(editorialOnPaper(storySpan * (materialsStart + 0.5), holds, roles), false)
+  })
+})
+
+describe('projectContacts', () => {
+  it('lists the phone and then the mail', () => {
+    const contacts = projectContacts()
+    assert.equal(contacts.length, 2)
+    assert.equal(contacts[0].href, 'tel:+393483198226')
+    assert.equal(contacts[0].label, '+39 348 319 8226')
+    assert.equal(contacts[1].href, 'mailto:mattiacandeloro.design@gmail.com')
+    assert.equal(contacts[1].label, 'mattiacandeloro.design@gmail.com')
   })
 })
 

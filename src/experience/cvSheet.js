@@ -62,8 +62,8 @@ export function cvSheetFill() {
 export function cvContacts() {
   return [
     {
-      href: 'mailto:mattia.candeloron2@gmail.com',
-      label: 'mattia.candeloron2@gmail.com',
+      href: 'mailto:mattiacandeloro.design@gmail.com',
+      label: 'mattiacandeloro.design@gmail.com',
       icon: 'mail',
     },
     {
@@ -74,12 +74,15 @@ export function cvContacts() {
   ]
 }
 
+export function cvContactIcon(kind) {
+  return kind === 'phone' ? PHONE_ICON : MAIL_ICON
+}
+
 export function cvContactMarkup() {
-  const icons = { mail: MAIL_ICON, phone: PHONE_ICON }
   return cvContacts()
     .map(
       (contact) =>
-        `<a class="cv-contact" href="${contact.href}">${icons[contact.icon]}<span>${contact.label}</span></a>`,
+        `<a class="cv-contact" href="${contact.href}">${cvContactIcon(contact.icon)}<span>${contact.label}</span></a>`,
     )
     .join('')
 }

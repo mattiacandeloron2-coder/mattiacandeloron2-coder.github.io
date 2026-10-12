@@ -1,6 +1,8 @@
+import { cvContactIcon, cvContacts } from './cvSheet.js'
 import { hangFrame } from './hang/frame.js'
 import { lerp, smoothstep } from './math.js'
 import { PosterFan } from './posters.js'
+import { toyFrame } from './ring/toyFrame.js'
 import { SnailTurn } from './snailTurn.js'
 import { StickerAdhesion } from './sticker/StickerAdhesion.js'
 
@@ -34,6 +36,10 @@ export function slidePin(offset, index = 0, worksTravelValue = 1) {
 export function projectFrames(project) {
   if (Array.isArray(project?.frames) && project.frames.length) return project.frames
   return [{ src: project?.image || '', role: 'cover', caption: true }]
+}
+
+export function lensHoldsMedia(lens, opening) {
+  return Boolean(lens) && !opening
 }
 
 export function storyScrolls(project) {
@@ -181,6 +187,13 @@ export function storyMeasuresVisual(scroll) {
 
 export function storyEndChrome(scroll) {
   return storyMeasuresVisual(scroll)
+}
+
+export function projectContacts() {
+  const contacts = cvContacts()
+  const phone = contacts.find((item) => item.icon === 'phone')
+  const mail = contacts.find((item) => item.icon === 'mail')
+  return [phone, mail].filter(Boolean)
 }
 
 export function storyEndNav(roles) {
@@ -427,10 +440,27 @@ function scrollCue() {
   return cue
 }
 
+function contactBand() {
+  const band = document.createElement('div')
+  band.className = 'works-contacts'
+  const label = document.createElement('p')
+  label.className = 'works-contacts-label'
+  label.textContent = 'contacts'
+  band.appendChild(label)
+  projectContacts().forEach((contact) => {
+    const link = document.createElement('a')
+    link.href = contact.href
+    link.innerHTML = `${cvContactIcon(contact.icon)}<span>${contact.label}</span>`
+    band.appendChild(link)
+  })
+  return band
+}
+
 function storyEnd(strip, { previous = false, refresh = false } = {}) {
   const bar = document.createElement('div')
   bar.className = 'works-end'
   bar.setAttribute('aria-hidden', 'true')
+  bar.appendChild(contactBand())
 
   const compact = document.createElement('button')
   compact.type = 'button'
@@ -1253,6 +1283,7 @@ function filmFrame(frame, options = {}) {
 }
 
 function storyFrame(frame, options = {}) {
+  if (frame.role === 'toy') return toyFrame(frame, options)
   if (frame.role === 'hang') return hangFrame(options)
   if (frame.role === 'reel') return reelFrame(frame, options)
   if (frame.role === 'film') return filmFrame(frame, options)
@@ -1448,9 +1479,13 @@ function paintEditorial(item, story, height) {
     if (frame.classList.contains('is-reel') || frame.classList.contains('is-film')) {
       const next = timeline.frames[index + 1]
       const showing = state.arrive >= 0.98 && (!next || next.arrive < 0.5)
-      frame.reel?.sync(showing)
-      frame.film?.sync(showing)
-      if (showing) frame.reel?.paint(performance.now())
+      const hold = lensHoldsMedia(
+        frame.closest('.works.is-lens'),
+        frame.closest('.works.is-opening'),
+      )
+      frame.reel?.sync(showing && !hold)
+      frame.film?.sync(showing && !hold)
+      if (showing && !hold) frame.reel?.paint(performance.now())
       return
     }
     if (frame.classList.contains('is-hang')) {
@@ -1513,6 +1548,13 @@ function paintEditorial(item, story, height) {
         frame.querySelectorAll('.works-note-label, .works-note-body'),
         editorialIn(state.dwell, 0.28, 0.62),
       )
+      return
+    }
+    if (frame.classList.contains('is-toy')) {
+      const next = timeline.frames[index + 1]
+      const showing = state.arrive >= 0.98 && (!next || next.arrive < 0.5)
+      const lens = Boolean(frame.closest('.works.is-lens'))
+      frame.toy?.sync(showing, { interactive: showing && !lens })
       return
     }
     if (frame.classList.contains('is-evolve')) {
@@ -1600,7 +1642,14 @@ export class WorksStrip {
         const track = document.createElement('div')
         track.className = 'works-story'
         const frames = projectFrames(project)
-        frames.forEach((frame) => track.appendChild(storyFrame(frame, { reducedMotion: this.reducedMotion })))
+        frames.forEach((frame) =>
+          track.appendChild(
+            storyFrame(frame, {
+              reducedMotion: this.reducedMotion,
+              onAdvance: () => this.advance(),
+            }),
+          ),
+        )
         slide.append(track, scrollCue())
         const roles = frames.map((frame) => frame.role)
         const endNav = storyEndNav(roles)
@@ -1669,6 +1718,7 @@ export class WorksStrip {
     if (!continuing) {
       item?.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => frame.reel?.reset())
       item?.track?.querySelectorAll('.works-frame.is-film').forEach((frame) => frame.film?.reset())
+      item?.track?.querySelectorAll('.works-frame.is-toy').forEach((frame) => frame.toy?.reset())
     }
     item?.track?.querySelectorAll('.works-frame.is-idea').forEach((frame) => frame.turn?.wake())
     item?.track?.querySelectorAll('.works-frame.is-sticker').forEach((frame) => frame.adhesion?.wake())
@@ -1687,6 +1737,7 @@ export class WorksStrip {
       if (video) video.muted = true
     })
     item?.track?.querySelectorAll('.works-frame.is-film').forEach((frame) => frame.film?.reset())
+    item?.track?.querySelectorAll('.works-frame.is-toy').forEach((frame) => frame.toy?.reset())
   }
 
   primeReel(id) {
@@ -1699,10 +1750,20 @@ export class WorksStrip {
         video.play()?.catch?.(() => {})
       })
     })
+    item?.track?.querySelectorAll('.works-frame.is-film video').forEach((video) => {
+      if (!video.paused) return
+      video.play()?.catch?.(() => {})
+    })
   }
 
   canNudge() {
     return Boolean(this.slides.find((item) => item.id === this.openId && item.story))
+  }
+
+  advance() {
+    const item = this.slides.find((slide) => slide.id === this.openId && slide.story)
+    if (!item) return
+    this.storyTarget = storyScroll(this.storyTarget, storySpan, item.scrollFrames || item.frameCount)
   }
 
   dismissPoster() {
@@ -1725,7 +1786,7 @@ export class WorksStrip {
     return true
   }
 
-  update(openId, previewId = null) {
+  update(openId, previewId = null, opening = false) {
     if (!this.root) return
     const lens = Boolean(previewId) && !openId
     if (openId) this.open(openId)
@@ -1735,6 +1796,7 @@ export class WorksStrip {
     const open = Boolean(shown)
     this.root.hidden = !open
     this.root.classList.toggle('is-lens', lens)
+    this.root.classList.toggle('is-opening', lens && opening)
     this.root.style.opacity = open ? '1' : '0'
     const height = this.root.clientHeight || window.innerHeight || 1
     this.story = this.reducedMotion ? this.storyTarget : lerp(this.story, this.storyTarget, 0.14)
@@ -1746,6 +1808,7 @@ export class WorksStrip {
         item.track?.querySelectorAll('.works-frame.is-reel').forEach((frame) => frame.reel?.sync(false))
         item.track?.querySelectorAll('.works-frame.is-film').forEach((frame) => frame.film?.sync(false))
         item.track?.querySelectorAll('.works-frame.is-hang').forEach((frame) => frame.hang?.sync(false))
+        item.track?.querySelectorAll('.works-frame.is-toy').forEach((frame) => frame.toy?.sync(false))
       }
       item.slide.style.transform = 'none'
       if (item.media) item.media.style.transform = 'none'

@@ -12,6 +12,8 @@ export const hangConfig = {
   hoverMinSpeed: 36,
   grabFollow: 0.72,
   grabReach: 4,
+  restLimit: 0.85,
+  restFrames: 45,
 }
 
 export function measureLength(rope) {
@@ -194,6 +196,40 @@ export function stepRopes(ropes, dt, config = hangConfig, input = {}) {
     )
   }
   enforce(ropes, config, config.distanceIterations, config.bendIterations)
+}
+
+export function restRopes(ropes, limit = hangConfig.restLimit, heldId = null, restFrames = hangConfig.restFrames) {
+  for (const rope of ropes) {
+    if (rope.id === heldId) {
+      rope.quiet = 0
+      continue
+    }
+    let energy = 0
+    for (const point of rope.points) {
+      if (point.fixed) continue
+      energy = Math.max(energy, Math.hypot(point.x - point.px, point.y - point.py))
+    }
+    if (energy > limit) {
+      rope.quiet = 0
+      continue
+    }
+    rope.quiet = Math.min(restFrames, (rope.quiet ?? 0) + 1)
+    if (rope.quiet < restFrames) {
+      for (const point of rope.points) {
+        point.px = point.x
+        point.py = point.y
+      }
+      continue
+    }
+    for (const point of rope.points) {
+      if (!point.fixed) {
+        point.x = point.px
+        point.y = point.py
+      }
+      point.px = point.x
+      point.py = point.y
+    }
+  }
 }
 
 export function settleRopes(ropes, frames = 140, config = hangConfig) {

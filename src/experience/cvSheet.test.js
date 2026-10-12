@@ -4,6 +4,7 @@ import { colors } from '../config.js'
 import {
   applyCvWheel,
   blowHintAllowed,
+  cvContactIcon,
   cvContactMarkup,
   cvContacts,
   cvCometCenter,
@@ -79,13 +80,15 @@ describe('cvContacts', () => {
   it('orders email then phone as working links', () => {
     const contacts = cvContacts()
     assert.equal(contacts.length, 2)
-    assert.equal(contacts[0].href, 'mailto:mattia.candeloron2@gmail.com')
+    assert.equal(contacts[0].href, 'mailto:mattiacandeloro.design@gmail.com')
     assert.equal(contacts[0].icon, 'mail')
     assert.equal(contacts[1].href, 'tel:+393483198226')
     assert.equal(contacts[1].icon, 'phone')
     const markup = cvContactMarkup()
-    assert.ok(markup.indexOf('mailto:mattia.candeloron2@gmail.com') < markup.indexOf('tel:+393483198226'))
+    assert.ok(markup.indexOf('mailto:mattiacandeloro.design@gmail.com') < markup.indexOf('tel:+393483198226'))
     assert.ok(markup.includes('viewBox="0 0 24 24"'))
+    assert.ok(cvContactIcon('phone').includes('M22 16.92'))
+    assert.ok(cvContactIcon('mail').includes('<rect'))
   })
 })
 

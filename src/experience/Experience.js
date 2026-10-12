@@ -591,7 +591,11 @@ export class Experience {
     this.cssParent.style.transform = rise
     if (this.overlayEl) this.overlayEl.style.transform = rise
     if (this.typeBackEl) this.typeBackEl.style.transform = rise
-    this.works.update(this.openProjectId, this.worksIndex?.previewId ?? null)
+    this.works.update(
+      this.openProjectId,
+      this.worksIndex?.previewId ?? null,
+      Boolean(this.worksIndex?.opening),
+    )
     this.worksIndex?.update(
       travel,
       this.openProjectId,
