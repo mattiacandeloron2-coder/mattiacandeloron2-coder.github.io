@@ -1,5 +1,14 @@
 import * as THREE from 'three'
 
+const holdFrameCap = 1 / 20
+
+export function holdStep(target, dt, rate, max, gates) {
+  if (!gates?.armed || gates.locked) return target
+  const step = Math.min(Math.max(dt, 0), holdFrameCap)
+  if (!(rate > 0) || !(max >= 0)) return target
+  return THREE.MathUtils.clamp(target + step * rate, 0, max)
+}
+
 /**
  * Normalize wheel / trackpad / touch into a comparable pixel-like delta.
  */
@@ -12,6 +21,7 @@ export class ScrollController {
     this.energy = 0
     this.max = options.max ?? 1
     this.locked = false
+    this.armed = false
     this.boundWheel = this.onWheel.bind(this)
 
     window.addEventListener('wheel', this.boundWheel, { passive: false })
@@ -19,6 +29,7 @@ export class ScrollController {
 
   onWheel(event) {
     event.preventDefault()
+    if (!this.armed) return
     if (this.locked) {
       this.onLocked?.(event)
       return
@@ -39,11 +50,22 @@ export class ScrollController {
     this.target = THREE.MathUtils.clamp(this.target, 0, this.max)
   }
 
+  arm() {
+    this.armed = true
+  }
+
   applyTouchDelta(deltaY) {
-    if (this.locked) return
+    if (!this.armed || this.locked) return
     const { maxDelta, distance, touchScale } = this.options
     const clamped = THREE.MathUtils.clamp(deltaY * touchScale, -maxDelta, maxDelta)
     this.target = THREE.MathUtils.clamp(this.target + clamped / distance, 0, this.max)
+  }
+
+  hold(dt) {
+    this.target = holdStep(this.target, dt, this.options.holdRate ?? 0, this.max, {
+      armed: this.armed,
+      locked: this.locked,
+    })
   }
 
   update() {

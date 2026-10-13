@@ -495,7 +495,7 @@ function storyEnd(strip, { previous = false, refresh = false } = {}) {
   next.type = 'button'
   next.className = 'works-next'
   const nextLabel = document.createElement('span')
-  nextLabel.textContent = refresh ? 'refresh all the website' : 'next project'
+  nextLabel.textContent = refresh ? 'refresh the whole website' : 'next project'
   next.appendChild(nextLabel)
   if (refresh) {
     next.classList.add('is-refresh')
@@ -1945,6 +1945,9 @@ export class WorksStrip {
     const openSlide = this.slides.find((item) => item.id === openId)
     const paper = openSlide?.editorial ? Boolean(openSlide.paper) : Boolean(openId) && storyPaper(this.story)
     this.root.classList.toggle('is-paper', paper)
+    const end = openSlide?.slide.querySelector('.works-end')
+    const endOpacity = end ? Number(end.style.opacity) || 0 : 0
+    this.root.classList.toggle('is-band', endOpacity > 0.2)
     this.onSoundtrack?.(videoGate)
   }
 }

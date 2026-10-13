@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js'
 import { config, isMobileQuery, reducedMotionQuery, colors } from '../config.js'
-import { introOpacity, outroOpacity, clamp } from './math.js'
+import { introOpacity, outroOpacity, clamp, smoothstep } from './math.js'
 import { ScrollController } from './ScrollController.js'
 import { WorksStrip, sceneLift, scrollMax, worksTravel } from './worksStrip.js'
 import { WorksIndex, applyProjectWheel, indexButtonVisible, nextProjectId, previousProjectId } from './worksIndex.js'
@@ -11,8 +11,9 @@ import { CvSheet, blowHintAllowed } from './cvSheet.js'
 import { Soundtrack } from './soundtrack.js'
 import { CameraRig } from './CameraRig.js'
 import { ParticleFigure } from './ParticleFigure.js'
+import { bootInk, bootPercent } from './bootProgress.js'
 import { Sections } from './Sections.js'
-import { BreathMic } from './breath.js'
+import { BreathMic, fiatoListens } from './breath.js'
 import {
   TRAIL_MAX,
   applyStroke,
@@ -79,6 +80,7 @@ export class Experience {
     this.heroBackEl = document.querySelector('[data-hero-back]')
     this.roleEl = document.querySelector('[data-role]')
     this.hintEl = document.querySelector('[data-scroll-hint]')
+    this.hintHolding = false
     this.metaEl = document.querySelector('[data-meta]')
     this.outroEl = document.querySelector('[data-outro]')
     this.worksEl = document.querySelector('[data-works]')
@@ -198,6 +200,8 @@ export class Experience {
     this.onTouchMove = this.onTouchMove.bind(this)
     this.onTouchEnd = this.onTouchEnd.bind(this)
     this.onBlowHint = this.onBlowHint.bind(this)
+    this.onScrollHintDown = this.onScrollHintDown.bind(this)
+    this.onScrollHintUp = this.onScrollHintUp.bind(this)
     this.openProject = this.openProject.bind(this)
     this.closeProject = this.closeProject.bind(this)
     this.onIndexKey = this.onIndexKey.bind(this)
@@ -209,19 +213,94 @@ export class Experience {
     window.addEventListener('touchcancel', this.onTouchEnd, { passive: true })
     window.addEventListener('keydown', this.onIndexKey)
     this.blowHintEl?.addEventListener('click', this.onBlowHint)
+    this.hintEl?.addEventListener('pointerdown', this.onScrollHintDown)
+    this.hintEl?.addEventListener('pointerup', this.onScrollHintUp)
+    this.hintEl?.addEventListener('pointercancel', this.onScrollHintUp)
+    this.hintEl?.addEventListener('lostpointercapture', this.onScrollHintUp)
     this.indexBackEl?.addEventListener('click', this.closeProject)
     this.applyLayout()
   }
 
+  paintBoot(state) {
+    const boot = document.querySelector('[data-boot]')
+    if (!boot) return
+    const percent = bootPercent(state)
+    boot.style.setProperty('--boot-ink', bootInk(percent))
+    const node = boot.querySelector('[data-boot-percent]')
+    if (node) node.textContent = `${percent}%`
+  }
+
   async start() {
-    await this.figure.load()
-    this.applyLayout()
-    if (this.mobile && !this.reducedMotion) {
-      this.breath = new BreathMic()
-      await this.breath.start()
-      await this.breath.resume()
+    const state = {
+      loaded: 0,
+      total: 0,
+      downloaded: false,
+      built: 0,
+      count: 0,
+      fonts: false,
+      painted: false,
+    }
+    const report = (partial) => {
+      Object.assign(state, partial)
+      this.paintBoot(state)
+    }
+    try {
+      await Promise.all([
+        this.figure.load(report),
+        (document.fonts?.ready ?? Promise.resolve()).then(() => report({ fonts: true })),
+      ])
+      this.applyLayout()
+      await this.renderer.compileAsync(this.scene, this.camera)
+    } catch {
+      /* a missing file still lets the page open, instead of spinning forever */
     }
     this.onFrame()
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    })
+    report({
+      downloaded: true,
+      fonts: true,
+      painted: true,
+      built: state.count || 1,
+      count: state.count || 1,
+    })
+    this.reveal()
+    this.armFiato()
+  }
+
+  armFiato() {
+    if (this.fiatoArmed || this.reducedMotion) return
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const hoverNone = window.matchMedia('(hover: none)').matches
+    if (!fiatoListens({ coarse, hoverNone, reducedMotion: this.reducedMotion })) return
+    this.fiatoArmed = true
+    if (!this.breath) this.breath = new BreathMic()
+    const wake = () => {
+      this.breath?.prime()
+      this.breath?.start().then(() => this.breath?.resume())
+    }
+    this.onFiatoWake = wake
+    wake()
+    window.addEventListener('pointerdown', wake, { once: true })
+  }
+
+  reveal() {
+    this.scroll.arm()
+    const boot = document.querySelector('[data-boot]')
+    if (!boot) return
+    const finish = () => {
+      boot.hidden = true
+    }
+    if (this.reducedMotion) {
+      finish()
+      return
+    }
+    boot.classList.add('is-done')
+    boot.addEventListener('transitionend', (event) => {
+      if (event.target === boot && event.propertyName === 'opacity') finish()
+    })
+    window.setTimeout(finish, 800)
   }
 
   applyLayout() {
@@ -271,6 +350,7 @@ export class Experience {
     if (this.cvSheet?.open || this.portfolio?.isOpen) return
     if (!event.touches.length) return
     const target = event.target
+    if (this.hintHolding || (target instanceof Element && target.closest('[data-scroll-hint]'))) return
     if (target instanceof Element && target.closest('.works-idea-stage')) {
       this.touch.turning = true
       return
@@ -297,6 +377,10 @@ export class Experience {
   }
 
   onTouchMove(event) {
+    if (this.hintHolding) {
+      event.preventDefault()
+      return
+    }
     if (this.cvSheet?.open || this.portfolio?.isOpen) return
     if (!event.touches.length) return
     if (this.touch.turning) {
@@ -343,8 +427,25 @@ export class Experience {
     this.fieldTouchY = null
   }
 
+  onScrollHintDown(event) {
+    if (event.button !== 0) return
+    if (this.cvSheet?.open || this.portfolio?.isOpen) return
+    this.hintHolding = true
+    event.preventDefault()
+    try {
+      this.hintEl?.setPointerCapture(event.pointerId)
+    } catch {
+      /* the press can end before the browser accepts capture */
+    }
+  }
+
+  onScrollHintUp() {
+    this.hintHolding = false
+  }
+
   async onBlowHint() {
     if (!this.breath) this.breath = new BreathMic()
+    this.breath.prime()
     await this.breath.start()
     await this.breath.resume()
   }
@@ -566,6 +667,7 @@ export class Experience {
     requestAnimationFrame(this.onFrame)
 
     const dt = this.clock.getDelta()
+    if (this.hintHolding && !this.cvSheet?.open && !this.portfolio?.isOpen) this.scroll.hold(dt)
     const progress = this.scroll.update()
     const orbit = clamp(progress, 0, 1)
     this.rig.update(orbit, this.reducedMotion)
@@ -588,8 +690,10 @@ export class Experience {
     if (this.heroBackEl) this.heroBackEl.style.opacity = '0'
     this.roleEl.style.opacity = String(role)
     const introChrome = clamp(1 - orbit / 0.12, 0, 1)
-    this.hintEl.style.opacity = String(introChrome)
     if (this.metaEl) this.metaEl.style.opacity = String(introChrome)
+    const hintLife = 1 - smoothstep(config.timings.outro.start - 0.08, config.timings.outro.peak, orbit)
+    this.hintEl.style.opacity = String(hintLife)
+    this.hintEl.style.setProperty('--hint-scale', String(hintLife))
     this.outroEl.style.opacity = String(outro)
     const travel = worksTravel(progress, window.innerHeight, config.scroll.distance)
     const lift = -sceneLift(travel) * window.innerHeight
@@ -630,10 +734,15 @@ export class Experience {
     window.removeEventListener('touchcancel', this.onTouchEnd)
     window.removeEventListener('keydown', this.onIndexKey)
     this.blowHintEl?.removeEventListener('click', this.onBlowHint)
+    this.hintEl?.removeEventListener('pointerdown', this.onScrollHintDown)
+    this.hintEl?.removeEventListener('pointerup', this.onScrollHintUp)
+    this.hintEl?.removeEventListener('pointercancel', this.onScrollHintUp)
+    this.hintEl?.removeEventListener('lostpointercapture', this.onScrollHintUp)
     this.indexBackEl?.removeEventListener('click', this.closeProject)
     this.skip.dispose()
     this.cvSheet?.dispose()
     this.portfolio?.dispose()
+    if (this.onFiatoWake) window.removeEventListener('pointerdown', this.onFiatoWake)
     this.breath?.dispose()
     this.scroll.dispose()
     this.renderer.dispose()

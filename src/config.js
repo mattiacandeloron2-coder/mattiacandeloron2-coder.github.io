@@ -128,6 +128,7 @@ export const config = {
     lineScale: 16,
     pageScale: 0.9,
     touchScale: 1.35,
+    holdRate: 0.08,
     energyDecay: 0.04,
     introEnd: 1,
   },

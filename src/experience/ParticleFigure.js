@@ -93,11 +93,18 @@ export class ParticleFigure {
     this.chargeVec = new THREE.Vector4(0, 0, 0, 0)
   }
 
-  async load() {
+  async load(onProgress = () => {}) {
     const url = this.options.model
-    const root = url.endsWith('.obj')
-      ? await new OBJLoader().loadAsync(url)
-      : (await new GLTFLoader().loadAsync(url)).scene
+    const root = await new Promise((resolve, reject) => {
+      const progress = (event) => {
+        if (event?.lengthComputable && event.total > 0) {
+          onProgress({ loaded: event.loaded, total: event.total })
+        }
+      }
+      if (url.endsWith('.obj')) new OBJLoader().load(url, resolve, progress, reject)
+      else new GLTFLoader().load(url, (gltf) => resolve(gltf.scene), progress, reject)
+    })
+    onProgress({ downloaded: true })
 
     root.updateMatrixWorld(true)
     const meshes = collectMeshes(root)
@@ -112,7 +119,10 @@ export class ParticleFigure {
     const classifier = createPartClassifier(worldPositions, { grid: 48 })
     const particles = this.options.particles
     const count = Math.round(this.mobile ? particles.countMobile : particles.countDesktop)
-    this.buildPoints(meshes, classifier, center, count, particles)
+    onProgress({ built: 0, count })
+    await this.buildPoints(meshes, classifier, center, count, particles, (built) => {
+      onProgress({ built, count })
+    })
 
     for (const mesh of meshes) {
       mesh.geometry.dispose()
@@ -129,7 +139,7 @@ export class ParticleFigure {
     return this
   }
 
-  buildPoints(meshes, classifier, center, count, particles) {
+  async buildPoints(meshes, classifier, center, count, particles, onBuild = () => {}) {
     const weights = meshes.map((mesh) => triangleAreas(mesh.geometry))
     const meshTotal = weights.reduce((sum, item) => sum + item.total, 0) || 1
     const meshCdf = []
@@ -242,6 +252,10 @@ export class ParticleFigure {
       seeds[i3] = seedA
       seeds[i3 + 1] = seedB
       seeds[i3 + 2] = seedC
+      if ((i + 1) % 1000 === 0) {
+        onBuild(i + 1)
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
     }
 
     const geometry = new THREE.BufferGeometry()

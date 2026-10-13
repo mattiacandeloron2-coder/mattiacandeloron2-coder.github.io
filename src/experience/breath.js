@@ -1,25 +1,52 @@
-export function highpassRms(samples, { prevX = 0, prevY = 0, alpha = 0.8 } = {}) {
+export function lowBandAlpha(sampleRate = 48000) {
+  const rate = Math.max(8000, Number(sampleRate) || 48000)
+  return 1 - Math.exp((-2 * Math.PI * 70) / rate)
+}
+
+export function breathEnergy(
+  samples,
+  { prevX = 0, prevY = 0, prevLow = 0, highAlpha = 0.8, lowAlpha = 0.008 } = {},
+) {
   let x1 = prevX
   let y1 = prevY
-  let acc = 0
+  let low = prevLow
+  let highAcc = 0
+  let lowAcc = 0
   let counted = 0
   const skip = Math.min(32, Math.max(0, (samples.length / 8) | 0))
   for (let i = 0; i < samples.length; i += 1) {
     const x = samples[i]
-    const y = alpha * (y1 + x - x1)
+    const y = highAlpha * (y1 + x - x1)
+    low += lowAlpha * (x - low)
     if (i >= skip) {
-      acc += y * y
+      highAcc += y * y
+      lowAcc += low * low
       counted += 1
     }
     x1 = x
     y1 = y
   }
   const n = counted || 1
-  return { rms: Math.sqrt(acc / n), prevX: x1, prevY: y1 }
+  return {
+    high: Math.sqrt(highAcc / n),
+    low: Math.sqrt(lowAcc / n),
+    prevX: x1,
+    prevY: y1,
+    prevLow: low,
+  }
 }
 
-export function isClearBlow(rms, { min = 0.14 } = {}) {
-  return Number(rms) >= min
+export function highpassRms(samples, state = {}) {
+  const out = breathEnergy(samples, state)
+  return { rms: out.high, prevX: out.prevX, prevY: out.prevY }
+}
+
+export function isClearBlow(high, low = 0, { highMin = 0.14, lowMin = 0.32 } = {}) {
+  return Number(high) >= highMin || Number(low) >= lowMin
+}
+
+export function fiatoListens({ coarse, hoverNone, reducedMotion } = {}) {
+  return Boolean(coarse) && Boolean(hoverNone) && !reducedMotion
 }
 
 export class BreathMic {
@@ -34,9 +61,22 @@ export class BreathMic {
     this.analyser = null
   }
 
+  prime() {
+    const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext
+    if (!AudioCtx) return false
+    if (!this.ctx) this.ctx = new AudioCtx()
+    this.ctx.resume?.()
+    return true
+  }
+
   async start() {
     if (this.ready) return true
     if (!navigator.mediaDevices?.getUserMedia) {
+      this.denied = true
+      return false
+    }
+    this.prime()
+    if (!this.ctx) {
       this.denied = true
       return false
     }
@@ -45,7 +85,6 @@ export class BreathMic {
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
         video: false,
       })
-      this.ctx = new AudioContext()
       const src = this.ctx.createMediaStreamSource(this.stream)
       this.analyser = this.ctx.createAnalyser()
       this.analyser.fftSize = 1024
@@ -68,9 +107,12 @@ export class BreathMic {
   poll(now) {
     if (!this.ready || !this.analyser || !this.buf) return false
     this.analyser.getFloatTimeDomainData(this.buf)
-    const out = highpassRms(this.buf, this.filter)
-    this.filter = { prevX: out.prevX, prevY: out.prevY }
-    if (!isClearBlow(out.rms)) return false
+    const out = breathEnergy(this.buf, {
+      ...this.filter,
+      lowAlpha: lowBandAlpha(this.ctx?.sampleRate),
+    })
+    this.filter = { prevX: out.prevX, prevY: out.prevY, prevLow: out.prevLow }
+    if (!isClearBlow(out.high, out.low)) return false
     if (now - this.lastBlowAt < 1100) return false
     this.lastBlowAt = now
     return true

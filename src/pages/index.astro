@@ -1,5 +1,8 @@
 ---
 import '../style.css'
+import { phoneRotateClient } from '../experience/phoneRotate.js'
+
+const rotateScript = phoneRotateClient()
 ---
 
 <!doctype html>
@@ -7,6 +10,7 @@ import '../style.css'
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script is:inline set:html={rotateScript}></script>
     <title>Mattia Candeloro — Industrial Design</title>
     <meta
       name="description"
@@ -18,8 +22,97 @@ import '../style.css'
       href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      html,
+      body {
+        background: #f7f7f4;
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.85rem;
+        background: #f7f7f4;
+      }
+      .rotate-gate {
+        display: none;
+      }
+      html.needs-rotate .rotate-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.35rem;
+        padding: 1.5rem;
+        background: #f7f7f4;
+        color: #111111;
+        pointer-events: auto;
+      }
+      .rotate-gate-icon {
+        display: block;
+        width: 4.6rem;
+        height: 4.6rem;
+      }
+      .rotate-gate-phone {
+        transform-box: view-box;
+        transform-origin: 32px 27px;
+        animation: rotate-gate-turn 2.6s ease-in-out infinite;
+      }
+      .rotate-gate-label {
+        margin: 0;
+        font-family: 'Instrument Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        line-height: 1;
+        text-transform: lowercase;
+        color: #111111;
+      }
+      @keyframes rotate-gate-turn {
+        0%,
+        20% {
+          transform: rotate(0deg);
+        }
+        55%,
+        100% {
+          transform: rotate(-90deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .rotate-gate-phone {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div class="rotate-gate" role="status">
+      <svg class="rotate-gate-icon" viewBox="0 0 64 64" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 49.5a20.5 20.5 0 1 1 16.8-19" />
+          <path d="M44.2 24.2l6.4 1.2-1.6 6.3" />
+        </g>
+        <g class="rotate-gate-phone" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+          <rect x="26" y="16" width="12" height="22" rx="1.8" />
+          <path d="M29.2 34.2h5.6" stroke-linecap="round" />
+        </g>
+      </svg>
+      <p class="rotate-gate-label">rotate your phone</p>
+    </div>
+    <div class="boot" data-boot role="status" aria-busy="true">
+      <div class="boot-mark">
+        <span class="boot-ring" data-boot-ring aria-hidden="true"></span>
+        <p class="boot-percent" data-boot-percent>0%</p>
+      </div>
+      <p class="boot-label">loading</p>
+    </div>
     <div class="type-back" aria-hidden="true" hidden>
       <p class="hero-back" data-hero-back>CANDELORO</p>
     </div>
@@ -81,7 +174,7 @@ import '../style.css'
         <span class="skip-core" data-skip-core></span>
         <canvas class="skip-cloud" data-skip-cloud width="236" height="236"></canvas>
       </span>
-      <span class="skip-label">skip the scroll and go to the info</span>
+      <span class="skip-label">or skip to my profile</span>
     </button>
 
     <aside class="cv-sheet" data-cv-sheet hidden aria-hidden="true">

@@ -68,6 +68,75 @@ body {
   overflow: visible !important;
 }
 
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  background: #f7f7f4;
+  color: #111111;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
+.boot-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 120px;
+  height: 120px;
+  color: var(--boot-ink, #9e9e98);
+  transition: color 0.18s linear;
+}
+
+.boot-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+}
+
+.boot-percent {
+  position: relative;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: currentColor;
+}
+
+.boot-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  line-height: 1;
+  color: #626262;
+}
+
+.boot.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot,
+  .boot-mark {
+    transition: none;
+  }
+}
+
 .overlay {
   z-index: 4;
 }
@@ -131,30 +200,36 @@ body {
 .scroll-hint {
   position: absolute;
   top: auto;
-  bottom: 3.2vh;
+  bottom: 8.4vh;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(var(--hint-scale, 1));
+  transform-origin: center bottom;
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scroll-hint::before {
+  content: "";
+  position: absolute;
+  inset: -22px;
 }
 
 .scroll-orb {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #9a9a94;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .scroll-orb-arrow {
-  width: 9px;
-  height: 9px;
-  margin-top: -4px;
-  border-right: 1px solid #7a7a76;
-  border-bottom: 1px solid #7a7a76;
+  width: 28px;
+  height: 28px;
+  border-right: 2.5px solid #3a3a36;
+  border-bottom: 2.5px solid #3a3a36;
   transform: rotate(45deg);
   animation: scroll-orb-nudge 2.6s ease-in-out infinite;
 }
@@ -185,7 +260,7 @@ body {
 .skip {
   position: fixed;
   right: 2.4vw;
-  bottom: 3.4vh;
+  bottom: 8.6vh;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -230,8 +305,10 @@ body {
 }
 
 .skip-label {
+  position: relative;
+  top: -5vh;
   max-width: 14.5rem;
-  margin: 0;
+  margin: -1.15rem 0 0;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -2819,6 +2896,12 @@ body {
   text-shadow: none;
 }
 
+.works.is-band ~ .index-back {
+  color: #ffffff;
+  text-shadow: none;
+  z-index: 12;
+}
+
 @keyframes works-phases-arrow-pulse {
   0%,
   100% {
@@ -3331,10 +3414,10 @@ body {
   0%,
   100% {
     transform: rotate(45deg) translate(0, 0);
-    opacity: 0.35;
+    opacity: 0.62;
   }
   50% {
-    transform: rotate(45deg) translate(2px, 2px);
+    transform: rotate(45deg) translate(5px, 5px);
     opacity: 1;
   }
 }
@@ -3378,7 +3461,7 @@ body {
 @media (max-width: 768px) {
   .scroll-hint {
     top: auto;
-    bottom: 8.8vh;
+    bottom: 14vh;
   }
 
   .works-cue,
@@ -4029,7 +4112,7 @@ body {
 
   .skip {
     right: 4vw;
-    bottom: 3.2vh;
+    bottom: 8.4vh;
   }
 
   .skip-orb,
@@ -4046,6 +4129,8 @@ body {
 
   .skip-label {
     max-width: 11.5rem;
+    top: -2.4vh;
+    margin-top: -0.65rem;
     font-size: 0.64rem;
     font-weight: 700;
     letter-spacing: 0.1em;
