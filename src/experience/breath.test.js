@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { breathEnergy, fiatoListens, highpassRms, isClearBlow, lowBandAlpha } from './breath.js'
+import { breathEnergy, fiatoCloudOffset, fiatoEnvelope, fiatoListens, highpassRms, isClearBlow, lowBandAlpha } from './breath.js'
+import { spaceEnvelope } from './pointerField.js'
 
 describe('highpassRms', () => {
   it('is near zero for a low hum (voice-like)', () => {
@@ -56,6 +57,37 @@ describe('a close blow on the microphone', () => {
   it('still hears a hissy blow', () => {
     const hiss = energy(noise(0.35))
     assert.equal(isClearBlow(hiss.high, hiss.low), true)
+  })
+})
+
+describe('fiato cloud', () => {
+  it('loosens a point into a cloud instead of launching it', () => {
+    const origin = [0.12, 0.34, 0.05]
+    const blown = fiatoCloudOffset(origin, [0.05, 0.92, 0.2], 1)
+    const reach = Math.hypot(blown.x, blown.y, blown.z)
+    assert.ok(reach > 0.12, `reach ${reach}`)
+    assert.ok(reach < 0.34, `reach ${reach}`)
+    const quiet = fiatoCloudOffset(origin, [0.05, 0.92, 0.2], 0)
+    assert.equal(quiet.x, 0)
+    assert.equal(quiet.y, 0)
+    assert.equal(quiet.z, 0)
+  })
+
+  it('sends different points different ways', () => {
+    const origin = [0.2, 0.2, 0]
+    const a = fiatoCloudOffset(origin, [0.1, 0.8, 0.2], 1)
+    const b = fiatoCloudOffset(origin, [0.9, 0.15, 0.7], 1)
+    const dot = a.x * b.x + a.y * b.y + a.z * b.z
+    const mag = Math.hypot(a.x, a.y, a.z) * Math.hypot(b.x, b.y, b.z)
+    assert.ok(dot < mag * 0.95)
+  })
+
+  it('holds the cloud, then comes home slowly', () => {
+    const cut = { coast: 0.5, returnSeconds: 3.4, peak: 1.18 }
+    assert.equal(spaceEnvelope(fiatoEnvelope.coast, fiatoEnvelope), 1)
+    assert.ok(spaceEnvelope(5, fiatoEnvelope) > 0.35)
+    assert.ok(spaceEnvelope(5, cut) < 0.02)
+    assert.ok(spaceEnvelope(9, fiatoEnvelope) < 0.02)
   })
 })
 

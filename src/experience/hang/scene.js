@@ -1,6 +1,6 @@
-import { Application, MeshRope, Point, Texture } from 'pixi.js'
+import { Application, Container, MeshRope, Point, Texture } from 'pixi.js'
 import { createBraidCanvas, createShadowCanvas } from './braid.js'
-import { createHangRopes } from './composition.js'
+import { createHangRopes, hangApplyFit, hangInkBounds, hangLocalPoint, hangViewFit } from './composition.js'
 import { hangConfig, pickTube, restRopes, settleRopes, stepRopes } from './physics.js'
 
 function cutCorners(src, dst) {
@@ -119,12 +119,14 @@ export function mountHang(stage, { reducedMotion = false } = {}) {
   let showing = true
   let braidTexture = null
   let shadowTexture = null
+  let viewFit = { scale: 1, x: 0, y: 0 }
+  const world = new Container()
   const braidCanvas = createBraidCanvas()
   const shadowCanvas = createShadowCanvas()
 
   const place = (event) => {
     const box = stage.getBoundingClientRect()
-    return { x: event.clientX - box.left, y: event.clientY - box.top }
+    return hangLocalPoint(event.clientX, event.clientY, box, stage.clientWidth, stage.clientHeight, viewFit)
   }
 
   const cursor = () => {
@@ -144,10 +146,13 @@ export function mountHang(stage, { reducedMotion = false } = {}) {
     const width = stage.clientWidth
     const height = stage.clientHeight
     if (width < 2 || height < 2 || !app) return
-    clearMeshes(app.stage, ropes)
+    clearMeshes(world, ropes)
     grab = null
     ropes = settleRopes(createHangRopes(width, height), 48)
-    buildMeshes(app.stage, ropes, braidTexture, shadowTexture)
+    const phone = document.documentElement.classList.contains('is-landscape-phone')
+    if (phone) hangApplyFit(ropes, hangViewFit(hangInkBounds(ropes), width, height))
+    viewFit = { scale: 1, x: 0, y: 0 }
+    buildMeshes(world, ropes, braidTexture, shadowTexture)
     syncMeshes(ropes)
     lastW = width
     lastH = height
@@ -257,6 +262,8 @@ export function mountHang(stage, { reducedMotion = false } = {}) {
       preference: 'webgl',
     })
     app.stage.sortableChildren = true
+    app.stage.addChild(world)
+    world.sortableChildren = true
     braidTexture = Texture.from(braidCanvas)
     shadowTexture = Texture.from(shadowCanvas)
     app.ticker.stop()

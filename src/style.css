@@ -24,6 +24,24 @@ body {
   user-select: none;
 }
 
+.phone-stage {
+  display: contents;
+}
+
+html.is-landscape-phone .phone-stage.is-fit {
+  display: block;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  overflow: hidden;
+  background: #f7f7f4;
+  transform-origin: 0 0;
+  transform: translate3d(var(--stage-x), var(--stage-y), 0) scale(var(--stage-scale));
+}
+
 #webgl,
 #css3d,
 .overlay,

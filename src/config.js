@@ -92,7 +92,7 @@ export const config = {
       strokeLength: 0.028,
       soffioAmp: 0,
       taglioAmp: 0.34,
-      gustAmp: 0.42,
+      gustAmp: 1,
       coastSeconds: 0.5,
       coastPeak: 1.18,
       returnSeconds: 3.4,

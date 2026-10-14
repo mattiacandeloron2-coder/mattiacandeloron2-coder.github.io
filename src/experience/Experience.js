@@ -13,7 +13,8 @@ import { CameraRig } from './CameraRig.js'
 import { ParticleFigure } from './ParticleFigure.js'
 import { bootInk, bootPercent } from './bootProgress.js'
 import { Sections } from './Sections.js'
-import { BreathMic, fiatoListens } from './breath.js'
+import { BreathMic, fiatoEnvelope, fiatoListens } from './breath.js'
+import { applyPhoneStage, pageSize } from './phoneStage.js'
 import {
   TRAIL_MAX,
   applyStroke,
@@ -218,7 +219,10 @@ export class Experience {
     this.hintEl?.addEventListener('pointercancel', this.onScrollHintUp)
     this.hintEl?.addEventListener('lostpointercapture', this.onScrollHintUp)
     this.indexBackEl?.addEventListener('click', this.closeProject)
-    this.applyLayout()
+    this.onVisualViewport = () => this.onResize()
+    window.visualViewport?.addEventListener('resize', this.onVisualViewport)
+    window.visualViewport?.addEventListener('scroll', this.onVisualViewport)
+    this.onResize()
   }
 
   paintBoot(state) {
@@ -320,12 +324,17 @@ export class Experience {
   }
 
   syncScrollMax() {
-    this.scroll.setMax(scrollMax(config.projects.length, window.innerHeight, config.scroll.distance))
+    this.scroll.setMax(scrollMax(config.projects.length, pageSize().height, config.scroll.distance))
   }
 
   setNdc(clientX, clientY) {
-    this.ndc.x = (clientX / window.innerWidth) * 2 - 1
-    this.ndc.y = -(clientY / window.innerHeight) * 2 + 1
+    const rect = this.renderer?.domElement?.getBoundingClientRect?.()
+    const width = rect?.width || window.innerWidth
+    const height = rect?.height || window.innerHeight
+    const left = rect?.left || 0
+    const top = rect?.top || 0
+    this.ndc.x = ((clientX - left) / width) * 2 - 1
+    this.ndc.y = -((clientY - top) / height) * 2 + 1
   }
 
   onPointerMove(event) {
@@ -641,7 +650,7 @@ export class Experience {
     this.figure.setField({
       samples,
       camWorldDir: this.camDir,
-      gust: spaceEnvelope(this.gustAge, envelope) * mute,
+      gust: spaceEnvelope(this.gustAge, fiatoEnvelope) * mute,
       charge:
         gesture === 'soffio'
           ? { x: this.localHit.x, y: this.localHit.y, z: this.localHit.z, w: mute }
@@ -650,8 +659,8 @@ export class Experience {
   }
 
   onResize() {
-    const width = window.innerWidth
-    const height = window.innerHeight
+    applyPhoneStage()
+    const { width, height } = pageSize()
     this.applyLayout()
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
@@ -695,8 +704,9 @@ export class Experience {
     this.hintEl.style.opacity = String(hintLife)
     this.hintEl.style.setProperty('--hint-scale', String(hintLife))
     this.outroEl.style.opacity = String(outro)
-    const travel = worksTravel(progress, window.innerHeight, config.scroll.distance)
-    const lift = -sceneLift(travel) * window.innerHeight
+    const view = pageSize()
+    const travel = worksTravel(progress, view.height, config.scroll.distance)
+    const lift = -sceneLift(travel) * view.height
     const rise = lift === 0 ? 'none' : `translate3d(0, ${lift}px, 0)`
     this.webglParent.style.transform = rise
     this.cssParent.style.transform = rise
@@ -727,6 +737,8 @@ export class Experience {
   destroy() {
     this.running = false
     window.removeEventListener('resize', this.onResize)
+    window.visualViewport?.removeEventListener('resize', this.onVisualViewport)
+    window.visualViewport?.removeEventListener('scroll', this.onVisualViewport)
     window.removeEventListener('pointermove', this.onPointerMove)
     window.removeEventListener('touchstart', this.onTouchStart)
     window.removeEventListener('touchmove', this.onTouchMove)

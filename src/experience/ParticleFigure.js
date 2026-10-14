@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { noiseChunk } from '../shaders/noise.js'
 import { PART, createPartClassifier } from './classifyParts.js'
 import { driftScale } from './dustMotion.js'
+import { fiatoExpand, fiatoScatter } from './breath.js'
 import { TRAIL_MAX } from './pointerField.js'
 
 function collectMeshes(root) {
@@ -366,8 +367,7 @@ export class ParticleFigure {
               across = side;
             }
           }
-          vec3 gustDir = normalize(origin * vec3(1.15, 0.8, 1.15) + (seed - 0.5) * 1.4 + vec3(0.0001));
-          vec3 gust = gustDir * uGust * uGustAmp;
+          vec3 gust = ((seed - 0.5) * ${fiatoScatter} + origin * ${fiatoExpand}) * uGust * uGustAmp;
           if (best < 0.001) return gust;
           float along = dot(origin - closest, tangent);
           float grain = seed.x - 0.5;

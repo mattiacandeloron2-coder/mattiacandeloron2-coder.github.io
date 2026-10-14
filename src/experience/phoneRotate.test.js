@@ -137,6 +137,7 @@ describe('phone rotate script', () => {
     assert.equal(page.meta.content, original)
     assert.equal(page.calls.set, 0)
     assert.equal(page.html.classes.has('needs-rotate'), false)
+    assert.equal(page.html.classes.has('is-landscape-phone'), false)
     assert.equal(page.calls.listeners.length, 0)
   })
 
@@ -149,12 +150,14 @@ describe('phone rotate script', () => {
       content: original,
     })
     assert.equal(page.html.classes.has('needs-rotate'), true)
+    assert.equal(page.html.classes.has('is-landscape-phone'), false)
     assert.equal(page.meta.content, phoneViewport)
 
     page.state.portrait = false
     const resize = page.calls.listeners.find((listener) => listener.type === 'resize')
     resize.fn()
     assert.equal(page.html.classes.has('needs-rotate'), false)
+    assert.equal(page.html.classes.has('is-landscape-phone'), true)
     assert.equal(page.meta.content, landscapeViewport)
   })
 

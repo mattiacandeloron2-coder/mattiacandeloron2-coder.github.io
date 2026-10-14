@@ -41,7 +41,7 @@ Sul telefono, dito fermo sulla figura = elettrizzazione. Passaggio veloce sulla 
 _Avoid_: soffio-mentre-scorri
 
 **Fiato**:
-Al telefono, un soffio chiaro nel microfono sfalda **tutta** la figura; poi rientro lento come per taglio e soffio. Non è la voce, non è un colpo di tosse. Non esiste al computer. All’apertura della pagina il telefono chiede il microfono. Avviso solo da telefono, in basso al centro, testo: `blow on the mic`. Sparisce dopo il primo soffio riuscito; i soffi successivi restano possibili senza scritta.
+Al telefono, un soffio chiaro nel microfono scardina **tutta** la figura in una nuvola di punti, senza lanciarla via; poi la calamita la ricompone lenta. Non è la voce, non è un colpo di tosse. Non esiste al computer. All’apertura della pagina il telefono chiede il microfono. Avviso solo da telefono, in basso al centro, testo: `blow on the mic`. Sparisce dopo il primo soffio riuscito; i soffi successivi restano possibili senza scritta.
 _Avoid_: soffio (che è il dito/mouse fermo), taglio, voce
 
 **Pallina**:

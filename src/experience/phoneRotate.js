@@ -53,10 +53,12 @@ export function phoneRotateClient() {
       var next = read();
       if (!next.phone) {
         document.documentElement.classList.remove('needs-rotate');
+        document.documentElement.classList.remove('is-landscape-phone');
         return;
       }
       if (meta.getAttribute('content') !== next.viewport) meta.setAttribute('content', next.viewport);
       document.documentElement.classList.toggle('needs-rotate', next.needsRotate);
+      document.documentElement.classList.toggle('is-landscape-phone', !next.needsRotate);
     }
     if (!read().phone) return;
     apply();

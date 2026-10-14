@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { pageSize } from './phoneStage.js'
 
 const holdFrameCap = 1 / 20
 
@@ -38,7 +39,7 @@ export class ScrollController {
     let delta = event.deltaY
 
     if (event.deltaMode === 1) delta *= lineScale
-    else if (event.deltaMode === 2) delta *= window.innerHeight * pageScale
+    else if (event.deltaMode === 2) delta *= pageSize().height * pageScale
     else delta *= pixelScale
 
     delta = THREE.MathUtils.clamp(delta, -maxDelta, maxDelta)

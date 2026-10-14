@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { createHangRopes, hangSpecs } from './hang/composition.js'
+import { createHangRopes, hangApplyFit, hangInkBounds, hangLocalPoint, hangSpecs, hangViewFit } from './hang/composition.js'
 import {
   hangConfig,
   measureLength,
@@ -126,6 +126,39 @@ describe('hanging tubes', () => {
         assert.ok(drift < 0.05, `${rope.id} drift ${drift}`)
       })
     })
+  })
+
+  it('fits every tube inside the phone frame, including the parts that leave the page', () => {
+    const width = 1280
+    const height = 900
+    const ropes = settleRopes(createHangRopes(width, height), 48)
+    const bounds = hangInkBounds(ropes)
+    assert.ok(bounds.minX < 0)
+    assert.ok(bounds.maxX > width)
+    assert.ok(bounds.minY < 0)
+    const fit = hangViewFit(bounds, width, height)
+    assert.ok(fit.scale < 1)
+    hangApplyFit(ropes, fit)
+    const fitted = hangInkBounds(ropes)
+    for (const [x, y] of [
+      [fitted.minX, fitted.minY],
+      [fitted.maxX, fitted.minY],
+      [fitted.minX, fitted.maxY],
+      [fitted.maxX, fitted.maxY],
+    ]) {
+      assert.ok(x >= 12 && x <= width - 12, `x ${x}`)
+      assert.ok(y >= 12 && y <= height - 12, `y ${y}`)
+    }
+  })
+
+  it('reads a desktop click in the same page pixels as the tubes', () => {
+    const point = hangLocalPoint(400, 250, { left: 10, top: 20, width: 1280, height: 900 }, 1280, 900, {
+      scale: 1,
+      x: 0,
+      y: 0,
+    })
+    assert.equal(point.x, 390)
+    assert.equal(point.y, 230)
   })
 
   it('comes back after a short pull', () => {

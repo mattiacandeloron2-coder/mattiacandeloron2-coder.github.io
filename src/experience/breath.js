@@ -49,6 +49,29 @@ export function fiatoListens({ coarse, hoverNone, reducedMotion } = {}) {
   return Boolean(coarse) && Boolean(hoverNone) && !reducedMotion
 }
 
+// A blow unhinges every point into a cloud around the figure. The scatter
+// is larger than the gentle outward drift, so the pose comes apart instead
+// of launching away from its centre.
+export const fiatoScatter = 0.36
+export const fiatoExpand = 0.18
+export const fiatoEnvelope = { coast: 1.15, returnSeconds: 7.6, peak: 1 }
+
+export function fiatoCloudOffset(origin, seed, amount = 1) {
+  const gain = Number(amount) || 0
+  if (!gain) return { x: 0, y: 0, z: 0 }
+  const sx = (Number(seed?.[0]) || 0) - 0.5
+  const sy = (Number(seed?.[1]) || 0) - 0.5
+  const sz = (Number(seed?.[2]) || 0) - 0.5
+  const ox = Number(origin?.[0]) || 0
+  const oy = Number(origin?.[1]) || 0
+  const oz = Number(origin?.[2]) || 0
+  return {
+    x: (sx * fiatoScatter + ox * fiatoExpand) * gain,
+    y: (sy * fiatoScatter + oy * fiatoExpand) * gain,
+    z: (sz * fiatoScatter + oz * fiatoExpand) * gain,
+  }
+}
+
 export class BreathMic {
   constructor() {
     this.ready = false

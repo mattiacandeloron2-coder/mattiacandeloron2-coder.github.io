@@ -101,3 +101,69 @@ export function createHangRopes(width, height) {
   const diameter = hangDiameter(width)
   return hangSpecs(width).map((spec) => makeRope(spec, width, height, diameter))
 }
+
+export function hangInkBounds(ropes) {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const rope of ropes) {
+    const pad = rope.diameter * 0.72
+    const drop = rope.diameter * 0.12
+    for (const point of rope.points) {
+      minX = Math.min(minX, point.x - pad)
+      maxX = Math.max(maxX, point.x + pad)
+      minY = Math.min(minY, point.y - pad)
+      maxY = Math.max(maxY, point.y + pad + drop)
+    }
+  }
+  if (!Number.isFinite(minX)) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+  return { minX, minY, maxX, maxY }
+}
+
+export function hangViewFit(bounds, width, height, margin = 36) {
+  const bw = Math.max(1, bounds.maxX - bounds.minX)
+  const bh = Math.max(1, bounds.maxY - bounds.minY)
+  const innerW = Math.max(1, width - margin * 2)
+  const innerH = Math.max(1, height - margin * 2)
+  const scale = Math.min(1, innerW / bw, innerH / bh)
+  return {
+    scale,
+    x: margin + (innerW - bw * scale) / 2 - bounds.minX * scale,
+    y: margin + (innerH - bh * scale) / 2 - bounds.minY * scale,
+  }
+}
+
+export function hangApplyFit(ropes, fit) {
+  const scale = fit?.scale > 0 ? fit.scale : 1
+  const ox = fit?.x || 0
+  const oy = fit?.y || 0
+  if (scale === 1 && ox === 0 && oy === 0) return ropes
+  for (const rope of ropes) {
+    for (const point of rope.points) {
+      point.x = point.x * scale + ox
+      point.y = point.y * scale + oy
+      point.px = point.x
+      point.py = point.y
+      point.ax = point.ax * scale + ox
+      point.ay = point.ay * scale + oy
+    }
+    rope.rest = rope.rest.map((span) => span * scale)
+    rope.diameter *= scale
+  }
+  return ropes
+}
+
+export function hangLocalPoint(clientX, clientY, box, layoutWidth, layoutHeight, fit) {
+  const width = box?.width > 0 ? box.width : layoutWidth
+  const height = box?.height > 0 ? box.height : layoutHeight
+  const sx = layoutWidth > 0 && width > 0 ? layoutWidth / width : 1
+  const sy = layoutHeight > 0 && height > 0 ? layoutHeight / height : 1
+  const x = (clientX - (box?.left || 0)) * sx
+  const y = (clientY - (box?.top || 0)) * sy
+  const scale = fit?.scale > 0 ? fit.scale : 1
+  return {
+    x: (x - (fit?.x || 0)) / scale,
+    y: (y - (fit?.y || 0)) / scale,
+  }
+}

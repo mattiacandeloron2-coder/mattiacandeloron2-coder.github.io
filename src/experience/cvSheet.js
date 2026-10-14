@@ -1,4 +1,5 @@
 import { colors } from '../config.js'
+import { pageRect, pageSize } from './phoneStage.js'
 
 const MAIL_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.6"/><path d="m4 7 8 6 8-6"/></svg>'
@@ -189,13 +190,19 @@ export class CvSheet {
     else image.addEventListener('load', wait, { once: true })
   }
 
+  sheetSpace() {
+    const page = pageSize()
+    return { core: pageRect(this.core), width: page.width, height: page.height }
+  }
+
   show() {
     if (!this.sheet || !this.core || this.open) return
     this.open = true
-    const core = this.core.getBoundingClientRect()
+    const space = this.sheetSpace()
+    const core = space.core
     applySheetBox(this.sheet, cvSheetStart(core))
     this.sheet.style.transform = ''
-    this.sheet.style.setProperty('--trail', `${cvCometTrail(core, window.innerWidth, window.innerHeight)}deg`)
+    this.sheet.style.setProperty('--trail', `${cvCometTrail(core, space.width, space.height)}deg`)
     this.sheet.hidden = false
     this.sheet.classList.remove('is-crash', 'is-burst', 'is-open')
     this.sheet.classList.add('is-live')
@@ -211,13 +218,15 @@ export class CvSheet {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (this.phase !== 'comet') return
-        applySheetBox(this.sheet, cvCometCenter(window.innerWidth, window.innerHeight, core))
+        const next = this.sheetSpace()
+        applySheetBox(this.sheet, cvCometCenter(next.width, next.height, core))
       })
     })
   }
 
   finishOpen() {
-    applySheetBox(this.sheet, cvSheetOpen(window.innerWidth, window.innerHeight))
+    const space = this.sheetSpace()
+    applySheetBox(this.sheet, cvSheetOpen(space.width, space.height))
     this.sheet.classList.remove('is-comet', 'is-crash')
     this.sheet.classList.add('is-burst', 'is-open')
     this.phase = 'open'
@@ -226,16 +235,18 @@ export class CvSheet {
   afterCrash() {
     if (this.phase !== 'crash') return
     clearTimeout(this.crashTimer)
-    const core = this.core.getBoundingClientRect()
+    const space = this.sheetSpace()
+    const core = space.core
     this.sheet.classList.remove('is-crash', 'is-comet', 'is-open')
     this.sheet.style.transform = 'none'
-    applySheetBox(this.sheet, cvSharpStart(window.innerWidth, window.innerHeight, core))
+    applySheetBox(this.sheet, cvSharpStart(space.width, space.height, core))
     void this.sheet.offsetWidth
     this.phase = 'burst'
     this.sheet.classList.add('is-burst')
     requestAnimationFrame(() => {
       if (this.phase !== 'burst') return
-      applySheetBox(this.sheet, cvSheetOpen(window.innerWidth, window.innerHeight))
+      const open = this.sheetSpace()
+      applySheetBox(this.sheet, cvSheetOpen(open.width, open.height))
     })
   }
 
@@ -270,12 +281,13 @@ export class CvSheet {
 
   flyHome() {
     if (!this.sheet || !this.core) return
-    const core = this.core.getBoundingClientRect()
+    const space = this.sheetSpace()
+    const core = space.core
     this.phase = 'return'
     this.sheet.classList.remove('is-burst', 'is-crash', 'is-open')
     this.sheet.style.setProperty(
       '--trail',
-      `${cvCometTrail(core, window.innerWidth, window.innerHeight) + 180}deg`,
+      `${cvCometTrail(core, space.width, space.height) + 180}deg`,
     )
     void this.sheet.offsetWidth
     this.sheet.classList.add('is-comet')
@@ -291,11 +303,11 @@ export class CvSheet {
       return
     }
     if (this.phase === 'open') {
-      const core = this.core.getBoundingClientRect()
+      const space = this.sheetSpace()
       this.phase = 'shrink'
       this.sheet.classList.remove('is-comet')
       this.sheet.classList.add('is-burst')
-      applySheetBox(this.sheet, cvCometCenter(window.innerWidth, window.innerHeight, core))
+      applySheetBox(this.sheet, cvCometCenter(space.width, space.height, space.core))
       return
     }
     this.flyHome()

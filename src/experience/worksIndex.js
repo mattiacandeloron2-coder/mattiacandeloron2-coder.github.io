@@ -1,4 +1,5 @@
 import { clamp, lerp, smoothstep } from './math.js'
+import { pagePoint, pageSize } from './phoneStage.js'
 
 export const INDEX_ORDER = ['01', '02', '03', '04', '05']
 
@@ -293,10 +294,11 @@ export class WorksIndex {
 
   placeLens(x, y, radius = null) {
     if (!this.root) return
-    this.root.style.setProperty('--lens-x', `${x}px`)
-    this.root.style.setProperty('--lens-y', `${y}px`)
+    const point = pagePoint(x, y)
+    this.root.style.setProperty('--lens-x', `${point.x}px`)
+    this.root.style.setProperty('--lens-y', `${point.y}px`)
     if (radius != null) this.root.style.setProperty('--lens-r', `${radius}px`)
-    if (this.cursor) this.cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`
+    if (this.cursor) this.cursor.style.transform = `translate3d(${point.x}px, ${point.y}px, 0)`
   }
 
   openFrom(id, event, item) {
@@ -316,8 +318,10 @@ export class WorksIndex {
     this.cursor?.classList.add('is-on', 'is-view')
     const from =
       parseFloat(getComputedStyle(this.root).getPropertyValue('--lens-r')) || LENS_VIEW
-    const page = lensPageRadius(window.innerWidth, window.innerHeight)
-    const cover = lensCoverRadius(window.innerWidth, window.innerHeight, x, y)
+    const size = pageSize()
+    const point = pagePoint(x, y)
+    const page = lensPageRadius(size.width, size.height)
+    const cover = lensCoverRadius(size.width, size.height, point.x, point.y)
     const started = performance.now()
     const duration = 1180
     const step = (now) => {
